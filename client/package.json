@@ -1,0 +1,41 @@
+{
+  "name": "r3f-vite-starter",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@campnetwork/origin": "^0.0.17",
+    "@react-three/drei": "9.75.0",
+    "@react-three/fiber": "8.13.3",
+    "@readyplayerme/react-avatar-creator": "^0.3.0",
+    "@types/three": "0.152.1",
+    "antd": "^5.21.4",
+    "autoprefixer": "^10.4.15",
+    "axios": "^1.7.7",
+    "ethers": "^6.13.4",
+    "jotai": "^2.2.3",
+    "lucide-react": "^0.539.0",
+    "postcss": "^8.4.30",
+    "r3f-vite-starter": "file:",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.27.0",
+    "react-toastify": "^10.0.6",
+    "react-tooltip": "^5.28.0",
+    "socket.io-client": "^4.7.2",
+    "three": "0.153.0",
+    "three-stdlib": "^2.24.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^3.1.0",
+    "tailwindcss": "^3.3.3",
+    "vite": "^4.1.0"
+  }
+}
