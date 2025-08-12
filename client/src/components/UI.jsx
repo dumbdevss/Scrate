@@ -6,6 +6,8 @@ import { Modal, Button ,Input} from "antd"; // Import Ant Design Modal and Butto
 import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from "@campnetwork/origin/react";
+import { contractABI, contractAddress, getAllPosts, pinataApi, pinataSecret, setCoordinates, uploadArt } from "../utils/utils";
 
 // Atoms
 export const buildModeAtom = atom(false);
@@ -31,7 +33,7 @@ export const UI = () => {
   const [img,setImg] = useState(null)
   const [uri,setURI] = useState(null)
   const [artPieces,setArtPieces] = useState([])
-
+  const {origin} = useAuth();
   // Functions to show and hide modal
   const showModal = () => {
     setIsModalVisible(true);
@@ -45,45 +47,45 @@ export const UI = () => {
     setIsModalVisible(false);
   };
   const handleSubmit = async (e) => {
-    // e.preventDefault();
+    e.preventDefault();
     
-    // const vals = generateFramePos(map.items);
-    // try {
-    //   // Prepare the data for IPFS upload
-    //   const data = JSON.stringify({ title, price, img });
-    //   console.log("Uploading data to IPFS:", data);
+    const vals = generateFramePos(map.items);
+    
+    try {
+      // Prepare the data for IPFS upload
+      const data = JSON.stringify({ title, price, img });
+      console.log("Uploading data to IPFS:", data);
   
-    //   // Pin JSON to IPFS using Pinata API
-    //   const res = await axios({
-    //     method: "post",
-    //     url: "https://api.pinata.cloud/pinning/pinJSONToIPFS",
-    //     data: data,
-    //     headers: {
-    //       pinata_api_key: `35cb1bf7be19d2a8fa0d`,
-    //       pinata_secret_api_key: `2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50`,
-    //       "Content-Type": "application/json",
-    //     },
-    //   });
+      // Pin JSON to IPFS using Pinata API
+      const res = await axios({
+        method: "post",
+        url: "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+        data: data,
+        headers: {
+          pinata_api_key: pinataApi,
+          pinata_secret_api_key: pinataSecret,
+          "Content-Type": "application/json",
+        },
+      });
   
-      // const resData = await res.data;
-      // console.log("IPFS Upload Success:", resData);
+      const resData = await res.data;
+      console.log("IPFS Upload Success:", resData);
   
-      // // Set the URI for the uploaded art
-      // const ipfsURI = `https://ipfs.io/ipfs/${resData.IpfsHash}`;
-      // setURI(ipfsURI);
-      // console.log(ipfsURI)
+      // Set the URI for the uploaded art
+      const ipfsURI = `https://ipfs.io/ipfs/${resData.IpfsHash}`;
+      setURI(ipfsURI);
+      console.log(ipfsURI)
   
-      // // Interact with the smart contract
-      // console.log("Calling contract to mint/upload art...");
-      // const tx = await contract.uploadArt(ipfsURI); // Pass the IPFS URI to uploadArt function
-      // await tx.wait(); // Wait for the transaction to be mined
-      // console.log("Transaction Success:", tx);
-      // const count = await contract.totalPosts();
-      // console.log("Total Posts:", count);
-      // const tx2 = await contract.setCoordinates(Number(count),vals.x,vals.y,vals.rotation)
-      // await tx2.wait()
-      // console.log("Transaction Success:", tx2);
-      // fetchArtPieces()
+      // Interact with the smart contract
+      console.log("Calling contract to mint/upload art...");
+      const tx = await origin.callContractMethod(contractAddress, contractABI, uploadArt, [ipfsURI])
+      console.log("Transaction Success:", tx);
+      const count = await origin.callContractMethod(contractAddress, contractABI, totalPosts, [])
+      console.log("Total Posts:", count);
+      const tx2 = await origin.callContractMethod(contractAddress, contractABI, setCoordinates, [Number(count), vals.x, vals.y, vals.rotation])
+      await tx2.wait()
+      console.log("Transaction Success:", tx2);
+      fetchArtPieces()
 
   
       // Create a new item for the map
@@ -96,39 +98,39 @@ export const UI = () => {
       //   by: localStorage.getItem("address"),
       // };
 
-      // const newItem = {
-      //   name: 'frame',
-      //   size: [ 1, 4 ],
-      //   gridPosition: [ vals.x, vals.y ],
-      //   by: localStorage.getItem("address"),
-      //   likes: 0,
-      //   rotation: vals.rotation,
-      //   link: img,
-      //   title: title,
-      //   price: price,
-      //   auctionActive: false,
-      //   sold: false,
-      //   maxBidder: '0x0000000000000000000000000000000000000000',
-      //   currentBid: 0,
-      //   id :Number(count)
-      // }
-      // // Update map items
-      // const temp = [...map.items];
-      // temp.push(newItem);
-      // console.log("Updated map items:", temp);
+      const newItem = {
+        name: 'frame',
+        size: [ 1, 4 ],
+        gridPosition: [ vals.x, vals.y ],
+        by: localStorage.getItem("address"),
+        likes: 0,
+        rotation: vals.rotation,
+        link: img,
+        title: title,
+        price: price,
+        auctionActive: false,
+        sold: false,
+        maxBidder: '0x0000000000000000000000000000000000000000',
+        currentBid: 0,
+        id :Number(count)
+      }
+      // Update map items
+      const temp = [...map.items];
+      temp.push(newItem);
+      console.log("Updated map items:", temp);
   
-      // // Emit updated items to the server
-      // socket.emit("itemsUpdate", temp);
+      // Emit updated items to the server
+      socket.emit("itemsUpdate", temp);
   
-    //   // Close the modal
-    //   toast.success("Successfully added new Art");
-    //   setIsModalVisible(false);
+      // Close the modal
+      toast.success("Successfully added new Art");
+      setIsModalVisible(false);
   
-    // } catch (error) {
-    //   console.error("Error during the submission process:", error);
-    //   // window.alert("Minting error: " + error.message || "Unknown error occurred");
-    //   toast.error("Error during the submission process");
-    // }
+    } catch (error) {
+      console.error("Error during the submission process:", error);
+      // window.alert("Minting error: " + error.message || "Unknown error occurred");
+      toast.error("Error during the submission process");
+    }
   };
 
   function generateFramePos(items) {
@@ -218,51 +220,47 @@ export const UI = () => {
   
   
   const handleImageChange =async (e) => {
-    // e.preventDefault()
-    // const file = e.target.files[0];
-    // if (typeof file !== "undefined") {
-    //   try {
-    //     const formData = new FormData();
-    //     formData.append("file", file);
-    //     // console.log(formData)
-    //     const res = await axios({
-    //       method: "post",
-    //       url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
-    //       data: formData,
-    //       headers: {
-    //         pinata_api_key: `35cb1bf7be19d2a8fa0d`,
-    //         pinata_secret_api_key: `2c2e9e43bca7a619154cb48e8b060c5643ea6220d0b7c9deb565fa491b3b3a50`,
-    //         "Content-Type": "multipart/form-data",
-    //       },
-    //     });
-    //     console.log(res);
-    //     const resData = await res.data;
-    //     setImg(`https://ipfs.io/ipfs/${resData.IpfsHash}`);
-    //   } catch (error) {
-    //     window.alert(error);
-    //   }
+    e.preventDefault()
+    const file = e.target.files[0];
+    if (typeof file !== "undefined") {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        // console.log(formData)
+        const res = await axios({
+          method: "post",
+          url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+          data: formData,
+          headers: {
+            pinata_api_key: pinataApi,
+            pinata_secret_api_key: pinataSecret,
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        console.log(res);
+        const resData = await res.data;
+        setImg(`https://ipfs.io/ipfs/${resData.IpfsHash}`);
+      } catch (error) {
+        window.alert(error);
+      }
     }
 
-  // }
-  // const fetchArtPieces = async () => {
-  //   try {
-  //     // Call the contract's getAllPosts function
-  //     const artPieces = await contract.getAllPosts();
-  //     setArtPieces(artPieces)
-      
-      
-      
-      
-  //     console.log("Fetched Art Pieces:", artPieces);
-  //     return artPiecesFormatted;
-  //   } catch (error) {
-  //     console.error("Error fetching art pieces:", error);
-  //     throw new Error("Failed to fetch art pieces.");
-  //   }
-  // };
-  // useEffect(()=>{
-  //   fetchArtPieces()
-  // },[])
+  }
+  const fetchArtPieces = async () => {
+    try {
+      // Call the contract's getAllPosts function
+      const artPieces = await origin.callContractMethod(contractAddress, contractABI, getAllPosts, [])
+      setArtPieces(artPieces)
+      console.log("Fetched Art Pieces:", artPieces);
+      return artPiecesFormatted;
+    } catch (error) {
+      console.error("Error fetching art pieces:", error);
+      throw new Error("Failed to fetch art pieces.");
+    }
+  };
+  useEffect(()=>{
+    fetchArtPieces()
+  },[])
   
 
   return (
