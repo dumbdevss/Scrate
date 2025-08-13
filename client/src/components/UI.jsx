@@ -7,7 +7,7 @@ import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from "@campnetwork/origin/react";
-import { contractABI, contractAddress, getAllPosts, pinataApi, pinataSecret, setCoordinates, uploadArt } from "../utils/utils";
+import { contractABI, contractAddress, getAllPosts, pinataApi, pinataSecret, setCoordinates, totalPosts, uploadArt } from "../utils/utils";
 
 // Atoms
 export const buildModeAtom = atom(false);
@@ -49,7 +49,7 @@ export const UI = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const vals = generateFramePos(map.items);
+
     
     try {
       // Prepare the data for IPFS upload
@@ -82,8 +82,9 @@ export const UI = () => {
       console.log("Transaction Success:", tx);
       const count = await origin.callContractMethod(contractAddress, contractABI, totalPosts, [])
       console.log("Total Posts:", count);
+      const vals = generateFramePos(Number(count));
+      console.log(vals)
       const tx2 = await origin.callContractMethod(contractAddress, contractABI, setCoordinates, [Number(count), vals.x, vals.y, vals.rotation])
-      await tx2.wait()
       console.log("Transaction Success:", tx2);
       fetchArtPieces()
 
@@ -133,90 +134,49 @@ export const UI = () => {
     }
   };
 
-  function generateFramePos(items) {
-    let ro0 = new Set([...Array(30).keys()]); // [0, 1, 2, ..., 29]
-    let ro1 = new Set([...Array(30).keys()]);
-    let ro2 = new Set([...Array(30).keys()]);
-    let ro3 = new Set([...Array(30).keys()]);
-  
-    // Function to find the first number of each group of 4 consecutive numbers
-  
-    items.map((item) => {
-      if (item.name == "frame") {
-        if (item.rotation == 0) {
-          ro0.delete(item.gridPosition[1]);
-          ro0.delete(item.gridPosition[1] + 1);
-          ro0.delete(item.gridPosition[1] + 2);
-          ro0.delete(item.gridPosition[1] + 3);
-        } else if (item.rotation == 1) {
-          ro1.delete(item.gridPosition[0]);
-          ro1.delete(item.gridPosition[0] + 1);
-          ro1.delete(item.gridPosition[0] + 2);
-          ro1.delete(item.gridPosition[0] + 3);
-        } else if (item.rotation == 2) {
-          ro2.delete(item.gridPosition[1]);
-          ro2.delete(item.gridPosition[1] + 1);
-          ro2.delete(item.gridPosition[1] + 2);
-          ro2.delete(item.gridPosition[1] + 3);
-        } else if (item.rotation == 3) {
-          ro3.delete(item.gridPosition[0]);
-          ro3.delete(item.gridPosition[0] + 1);
-          ro3.delete(item.gridPosition[0] + 2);
-          ro3.delete(item.gridPosition[0] + 3);
-        }
-      }
-    });
-  
-    // Find and store only the first number of consecutive groups of 4
-    ro0 = getFirstConsecutiveNumbers(ro0);
-    ro1 = getFirstConsecutiveNumbers(ro1);
-    ro2 = getFirstConsecutiveNumbers(ro2);
-    ro3 = getFirstConsecutiveNumbers(ro3);
-  
-    // Convert back to arrays if needed
-    ro0 = Array.from(ro0);
-    ro1 = Array.from(ro1);
-    ro2 = Array.from(ro2);
-    ro3 = Array.from(ro3);
-  
-    // console.log("ro0:", ro0);
-    // console.log("ro1:", ro1);
-    // console.log("ro2:", ro2);
-    // console.log("ro3:", ro3);
-    
-    if (ro0.length > 0) {
-      return { rotation: 0, x:0,y: getRandomNumber(ro0) }
-    } else if (ro1.length > 0) {
-      return { rotation: 1, y:15,x: getRandomNumber(ro1) }
-    } else if (ro2.length > 0) {
-      return { rotation: 2, x:15,y: getRandomNumber(ro2) }
-    } else if (ro3.length > 0) {
-      return { rotation: 3, y:0,x: getRandomNumber(ro3) }
-    } else {
-      alert("No empty space");
-      return { rotation: 0, x:0,y: 0 }; 
+  function generateFramePos(total) {
+    let totalRotations = Math.floor((total*5) / 30);
+    let left = 30 - ((total*5) % 30);
+    let currentRotation = totalRotations;
+    if (left < 4) {
+      currentRotation += 1;
+      left = 30;
+    }
+    let toUse = 30- left;
+    switch (currentRotation) {
+      case 0:
+        return { x:0, y:toUse, rotation: 0 };
+      case 1:
+        return { x:toUse, y:29, rotation: 1 };
+      case 2:
+        return { x:29, y:30-toUse, rotation: 2 };
+      case 3:
+        return { x:30-toUse, y:0, rotation: 3 };
+      default:
+        toast.info("No more frames can be added");
+        return { x: 0, y: 0, rotation: 0 }; //
     }
   }
-  function getRandomNumber(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
+  // function getRandomNumber(arr) {
+  //   return arr[Math.floor(Math.random() * arr.length)];
+  // }
   
-  function getFirstConsecutiveNumbers(set) {
-    const sortedArray = Array.from(set).sort((a, b) => a - b);
-    let firstNumbers = new Set();
+  // function getFirstConsecutiveNumbers(set) {
+  //   const sortedArray = Array.from(set).sort((a, b) => a - b);
+  //   let firstNumbers = new Set();
 
-    for (let i = 0; i < sortedArray.length - 3; i++) {
-      if (
-        sortedArray[i + 1] === sortedArray[i] + 1 &&
-        sortedArray[i + 2] === sortedArray[i] + 2 &&
-        sortedArray[i + 3] === sortedArray[i] + 3
-      ) {
-        firstNumbers.add(sortedArray[i]);
-      }
-    }
+  //   for (let i = 0; i < sortedArray.length - 3; i++) {
+  //     if (
+  //       sortedArray[i + 1] === sortedArray[i] + 1 &&
+  //       sortedArray[i + 2] === sortedArray[i] + 2 &&
+  //       sortedArray[i + 3] === sortedArray[i] + 3
+  //     ) {
+  //       firstNumbers.add(sortedArray[i]);
+  //     }
+  //   }
 
-    return firstNumbers;
-  }
+  //   return firstNumbers;
+  // }
   
   
   const handleImageChange =async (e) => {
@@ -248,11 +208,11 @@ export const UI = () => {
   }
   const fetchArtPieces = async () => {
     try {
+      if(origin == null) return;
       // Call the contract's getAllPosts function
       const artPieces = await origin.callContractMethod(contractAddress, contractABI, getAllPosts, [])
       setArtPieces(artPieces)
       console.log("Fetched Art Pieces:", artPieces);
-      return artPiecesFormatted;
     } catch (error) {
       console.error("Error fetching art pieces:", error);
       throw new Error("Failed to fetch art pieces.");
@@ -260,7 +220,7 @@ export const UI = () => {
   };
   useEffect(()=>{
     fetchArtPieces()
-  },[])
+  },[origin])
   
 
   return (

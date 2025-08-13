@@ -1,7 +1,7 @@
 import NftGallery from '../abi/NFTGallery.json';
 
 
-export const contractAddress = "0x560f097cd12095748c1Bf068F44FE11E3B6104c6";
+export const contractAddress = "0x254147C7C0a9BB490b4499c839F6a5f5DefB17DB";
 export const contractABI = NftGallery.abi;
 
 // function Names
@@ -10,6 +10,12 @@ export const uploadArt = 'uploadArt';
 export const totalPosts = 'totalPosts';
 export const setCoordinates = 'setCoordinates';
 export const getAllPosts = 'getAllPosts';
+export const buyArt = 'buyArt';
+export const placeBid = 'placeBid';
+export const toggleAuction = 'toggleAuction';
+export const getBidders = 'getBidders';
+export const getMaxBid = 'getMaxBid';
+export const likeArt = 'likeArt';
 
 // keys
 
