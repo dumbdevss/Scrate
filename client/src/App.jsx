@@ -13,6 +13,8 @@ import StoreWalls3 from "./components/walls/Storewalls3";
 import StoreWalls4 from "./components/walls/Storewalls4";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "@campnetwork/origin/react";
+import { buyArt, contractABI, contractAddress, getBidders, getMaxBid, likeArt, placeBid, toggleAuction } from "./utils/utils";
 
 function App() {
   const [shopMode] = useAtom(shopModeAtom);
@@ -40,92 +42,75 @@ function App() {
   const [bid, setBid] = useState(null);
   const [title, setTitle] = useState(null);
   const [owner, setOwner] = useState("");
-
+  const {origin} = useAuth();
 
 
   const handleBuy = async (id, price) => {
-  //   try {
-  //     // Ensure that state.contract is available
-  //     if (!state.contract) {
-  //       console.error("Contract not initialized");
-  //       return;
-  //     }
+    try {
+      // Ensure that state.contract is availabl
 
-  //     // Parse the price from Ether to Wei
-  //     const tx = await state.contract.buyArt(id, {
-  //       value: ethers.parseEther(String(price)), // Ensure price is a string like "0.1"
-  //     });
+      // Parse the price from Ether to Wei
+      const tx = await origin.callContractMethod(contractAddress, contractABI, buyArt, [id], {value: price});
 
-  //     // Wait for the transaction to be confirmed
-  //     await tx.wait();
-
-  //     console.log("Bought Successfully!!");
-  //   } catch (error) {
-  //     console.error("Error buying art:", error);
-  //   }
+      console.log("Bought Successfully!!", tx);
+    } catch (error) {
+      console.error("Error buying art:", error);
+    }
   };
   const handleBid = async (id, bid) => {
-  //   try {
-  //     const tx = await state.contract.placeBid(id, {
-  //       value: ethers.parseEther(String(bid)),
-  //     });
-  //     await tx.wait();
-  //     console.log("Bid Successfully!!");
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
+    try {
+      const tx = await origin.callContractMethod(contractAddress, contractABI, placeBid, [id], {value: BigInt(bid * 1e18)});
+      console.log("Bid Successfully!!", tx);
+    } catch (error) {
+      console.log(error);
+    }
   };
   const handleToggle = async (id) => {
-  //   try {
-  //     const tx = await state.contract.toggleAuction(id);
-  //     await tx.wait();
-
-  //     console.log("Auction Toggled");
-  //   } catch (error) {}
+    try {
+      const tx = await origin.callContractMethod(contractAddress, contractABI, toggleAuction, [id]);
+      console.log("Auction Toggled", tx);
+    } catch (error) {
+      console.log(error);
+    }
   };
   const [bidders, setBidders] = useState([]);
   const [isBiddersModalVisible, setIsBiddersModalVisible] = useState(false); // Control the visibility of bidders modal
 
   const handleGetBidders = async (id) => {
-  //   try {
-  //     const fetchedBidders = await state.contract.getBidders(id);
-  //     // await fetchedBidders.wait();
-  //     setBidders(fetchedBidders);
-  //     setIsBiddersModalVisible(true);
+    try {
+      const fetchedBidders = await origin.callContractMethod(contractAddress, contractABI, getBidders, [id]);
+      setBidders(fetchedBidders);
+      setIsBiddersModalVisible(true);
 
-  //     console.log("Bidders fetched");
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
+      console.log("Bidders fetched", fetchedBidders);
+    } catch (error) {
+      console.log(error);
+    }
   };
   const [maxBid, setMaxBid] = useState(null); // To store the maximum bid
   const [isMaxBidModalVisible, setIsMaxBidModalVisible] = useState(false); // Control the visibility of max bid modal
   const handleGetMaxBid = async (id) => {
-  //   try {
-  //     const fetchedMaxBid = await state.contract.getMaxBid(id);
+    try {
+      const maxBidInWei = await origin.callContractMethod(contractAddress, contractABI, getMaxBid, [id]);
 
-  //     // Convert the fetched value from Wei to Ether for display
-  //     const maxBidInEther = ethers.formatEther(fetchedMaxBid);
+      // After fetching, store the max bid and open the modal
+      setMaxBid(maxBidInWei);
+      setIsMaxBidModalVisible(true);
 
-  //     // After fetching, store the max bid and open the modal
-  //     setMaxBid(maxBidInEther);
-  //     setIsMaxBidModalVisible(true);
-
-  //     console.log("Max bid fetched:", maxBidInEther);
-  //   } catch (error) {
-  //     console.error("Error fetching max bid:", error);
-  //   }
+      console.log("Max bid fetched:", maxBidInWei);
+    } catch (error) {
+      console.error("Error fetching max bid:", error);
+    }
   };
   const handleLike = async (id) => {
-  //   try {
-  //     const tx = await state.contract.likeArt(id);
-  //     await tx.wait();
-  //     console.log("Art liked successfully!");
+    try {
+      const tx = await origin.callContractMethod(contractAddress, contractABI, likeArt, [id]);
+      console.log("Art liked successfully!", tx);
 
-  //     // Optionally, fetch the updated number of likes
-  //   } catch (error) {
-  //     console.error("Error liking art:", error);
-  //   }
+      // Optionally, fetch the updated number of likes
+    } catch (error) {
+      console.error("Error liking art:", error);
+    }
   };
 
   return (

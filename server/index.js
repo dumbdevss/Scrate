@@ -37,49 +37,46 @@ const io = new Server(server, {
 // });
 
 const privateKey =
-  "529038177e54eb14bb591eaf0e7517112d7f4189f372f4a15a7d0229236adf7f";
+  "440e0d85a55d3f9bb901900c62bc33f77570c32b640b3e881e3422c34a199ca7";
 const alchemyProvider = new JsonRpcProvider(
-  "https://polygon-amoy.g.alchemy.com/v2/OlHr_15i85AUNY6JNMQ2isTduKxgWGFy"
+  "https://rpc.basecamp.t.raas.gelato.cloud"
 );
-const contractAddress = "0x560f097cd12095748c1Bf068F44FE11E3B6104c6";
+const contractAddress = "0x254147C7C0a9BB490b4499c839F6a5f5DefB17DB";
 
-const signer = new ethers.Wallet(privateKey, alchemyProvider);
 // console.log(abi.abi)
+const signer = new ethers.Wallet(privateKey, alchemyProvider);
 const contract = new ethers.Contract(contractAddress, abi.abi, signer);
-
 // Check if the contract instance is created successfully
-// if (contract) {
-//   console.log("Contract instance:", contract);
-// } else {
-//   console.error("Failed to create contract instance");
-// }
+if (contract) {
+  console.log("Contract instance:", contract);
+} else {
+  console.error("Failed to create contract instance");
+}
 const fetchAllPosts = async () => {
-  // const posts = await contract.getAllPosts();
-  // posts.map(async (post, i) => {
-  //   const imgResponse = await fetch(post[1]);
-  //   const imgData = await imgResponse.json();
-  //   const obj = {
-  //     ...items.frame,
-  //     gridPosition: [Number(post[8]), Number(post[9])],
-  //     by: post[2],
-  //     likes: Number(post[7]),
-  //     rotation: Number(post[10]),
-  //     link: imgData.img,
-  //     title: imgData.title,
-  //     price: imgData.price,
-  //     auctionActive: post[5],
-  //     sold: post[6],
-  //     maxBidder: post[4],
-  //     currentBid: Number(post[3]),
-  //     id: Number(post[0]),
-  //   };
-  //   console.log(obj);
-  //   map.items.push(obj);
-  // });
+  const posts = await contract.getAllPosts();
+  posts.map(async (post, i) => {
+    const imgResponse = await fetch(post[1]);
+    const imgData = await imgResponse.json();
+    const obj = {
+      ...items.frame,
+      gridPosition: [Number(post[8]), Number(post[9])],
+      by: post[2],
+      likes: Number(post[7]),
+      rotation: Number(post[10]),
+      link: imgData.img,
+      title: imgData.title,
+      price: imgData.price,
+      auctionActive: post[5],
+      sold: post[6],
+      maxBidder: post[4],
+      currentBid: Number(post[3]),
+      id: Number(post[0]),
+    };
+    console.log(obj);
+    map.items.push(obj);
+  });
 };
-// fetchAllPosts()
-
-// io.listen(8080);
+fetchAllPosts()
 
 const characters = [];
 

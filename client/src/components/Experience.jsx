@@ -15,6 +15,8 @@ import {
 } from "./UI";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuth } from "@campnetwork/origin/react";
+import { contractABI, contractAddress, setCoordinates } from "../utils/utils";
 export const Experience = ({ onFrameClick}) => {
   const [buildMode, setBuildMode] = useAtom(buildModeAtom);
   const [shopMode, setShopMode] = useAtom(shopModeAtom);
@@ -24,7 +26,7 @@ export const Experience = ({ onFrameClick}) => {
   const [onFloor, setOnFloor] = useState(false);
   useCursor(onFloor);
   const { vector3ToGrid, gridToVector3 } = useGrid();
-
+  const {origin} = useAuth();
   const scene = useThree((state) => state.scene);
   const [user] = useAtom(userAtom);
 
@@ -54,9 +56,9 @@ export const Experience = ({ onFrameClick}) => {
         console.log(newItems[draggedItem])
         // need to update blockchain coordinates here
         setDraggedItem(null);
-        // const tx = await contract.setCoordinates(newItems[draggedItem].id,newItems[draggedItem].gridPosition[0],newItems[draggedItem].gridPosition[1],newItems[draggedItem].rotation)
-        // await tx.wait();
-        // console.log("Coordinates set successfully. Hash:",tx)
+        const params = [newItems[draggedItem].id, newItems[draggedItem].gridPosition[0], newItems[draggedItem].gridPosition[1], newItems[draggedItem].rotation]
+        const tx = await origin.callContractMethod(contractAddress, contractABI, setCoordinates, params)
+        console.log("Coordinates set successfully. Hash:",tx)
         toast.success("Position changed successfully");
       }
     }
