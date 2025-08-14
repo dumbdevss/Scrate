@@ -752,11 +752,13 @@ const updateGrid = () => {
       item.rotation === 1 || item.rotation === 3 ? item.size[0] : item.size[1];
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        grid.setWalkableAt(
-          item.gridPosition[0] + x,
-          item.gridPosition[1] + y,
-          false
-        );
+        const gridX = item.gridPosition[0] + x;
+        const gridY = item.gridPosition[1] + y;
+        // Check bounds before setting walkable
+        if (gridX >= 0 && gridX < map.size[0] * map.gridDivision && 
+            gridY >= 0 && gridY < map.size[1] * map.gridDivision) {
+          grid.setWalkableAt(gridX, gridY, false);
+        }
       }
     }
   });
