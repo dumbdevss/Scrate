@@ -25,7 +25,7 @@ This project **leverages the Camp Origin SDK** for wallet management, on-chain c
 - Artists and visitors can create personalized avatars to represent themselves in the space.
 - Supports unique outfits, accessories, and animations.
 
-  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/81f8dc3c-345c-4598-9a23-f143d18317b2" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/81f8dc3c-345c-4598-9a23-f143d18317b2" />
 
 
 ### 💰 Buy, Sell, & Auction
@@ -33,13 +33,13 @@ This project **leverages the Camp Origin SDK** for wallet management, on-chain c
 - Timed auctions with transparent bidding history.
 - Blockchain-based proof of ownership.
 
-  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7352af08-b48d-4502-9d89-83e2dbc064f0" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7352af08-b48d-4502-9d89-83e2dbc064f0" />
 
-  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f40cba35-fb03-4afc-b9a5-8186d2ac9841" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f40cba35-fb03-4afc-b9a5-8186d2ac9841" />
 
-  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5a8b755e-77b6-4095-b030-42ab5dd41982" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5a8b755e-77b6-4095-b030-42ab5dd41982" />
 
-  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b97d441e-3174-4817-9669-8cea69062fce" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b97d441e-3174-4817-9669-8cea69062fce" />
 
 
 
@@ -81,10 +81,12 @@ Deployed Address: 0x192690c260b80dCeFb40Ec847b45AfE13eA43Ff0 on basecamp
 We use Camp’s Origin SDK for:
 
 Wallet Connection:
+
 <img width="856" height="441" alt="Screenshot From 2025-08-14 07-27-44" src="https://github.com/user-attachments/assets/0d578c4a-2b6a-4329-89c3-2ea1d00f3402" />
 
 
 Smart Contract Calls:
+
 <img width="867" height="645" alt="Screenshot From 2025-08-14 07-28-21" src="https://github.com/user-attachments/assets/fa8e7fed-e133-4f39-a0aa-2b41a265f1b5" />
 
 <img width="1024" height="794" alt="Screenshot From 2025-08-14 07-29-13" src="https://github.com/user-attachments/assets/d0d75d56-680a-432f-be7c-8736f280de75" />
