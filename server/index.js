@@ -28,7 +28,7 @@ server.listen(port, () => {
 
 const io = new Server(server, {
   cors: {
-    origin: ["https://meta-gallery-client.vercel.app/", "http://localhost:5173", "http://localhost:3000"],
+    origin: ["https://meta-gallery-client.vercel.app/", "http://localhost:5173", "http://localhost:3000", "https://imagine-sandy.vercel.app"],
     methods: ["GET", "POST"]
   },
 });
