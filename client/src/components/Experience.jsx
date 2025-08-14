@@ -22,7 +22,7 @@ export const Experience = ({ onFrameClick}) => {
   const [shopMode, setShopMode] = useAtom(shopModeAtom);
   const [characters] = useAtom(charactersAtom);
   const [map] = useAtom(mapAtom);
-  const [items, setItems] = useState(map.items);
+  const [items, setItems] = useState(map?.items || []);
   const [onFloor, setOnFloor] = useState(false);
   useCursor(onFloor);
   const { vector3ToGrid, gridToVector3 } = useGrid();
@@ -97,13 +97,13 @@ export const Experience = ({ onFrameClick}) => {
     // check if item is in bounds
     if (
       dragPosition[0] < 0 ||
-      dragPosition[0] + width > map.size[0] * map.gridDivision
+      dragPosition[0] + width > (map?.size?.[0] || 0) * (map?.gridDivision || 1)
     ) {
       droppable = false;
     }
     if (
       dragPosition[1] < 0 ||
-      dragPosition[1] + height > map.size[1] * map.gridDivision
+      dragPosition[1] + height > (map?.size?.[1] || 0) * (map?.gridDivision || 1)
     ) {
       droppable = false;
     }
@@ -195,8 +195,8 @@ export const Experience = ({ onFrameClick}) => {
       >
         <orthographicCamera
           attach={"shadow-camera"}
-          args={[-map.size[0], map.size[1], 10, -10]}
-          far={map.size[0] + map.size[1]}
+          args={[-(map?.size?.[0] || 15), (map?.size?.[1] || 15), 10, -10]}
+          far={(map?.size?.[0] || 15) + (map?.size?.[1] || 15)}
         />
       </directionalLight>
       <OrbitControls
@@ -211,7 +211,7 @@ export const Experience = ({ onFrameClick}) => {
       {shopMode && <Shop onItemSelected={onItemSelected} />}
 
       {!shopMode &&
-        (buildMode ? items : map.items).map((item, idx) => (
+        (buildMode ? items : map?.items || []).map((item, idx) => (
           <Item
             key={`${item.name}-${idx}`}
             item={item}
@@ -258,11 +258,11 @@ export const Experience = ({ onFrameClick}) => {
               setDragPosition(newPosition);
             }
           }}
-          position-x={map.size[0] / 2}
-          position-z={map.size[1] / 2}
+          position-x={(map?.size?.[0] || 15) / 2}
+          position-z={(map?.size?.[1] || 15) / 2}
           receiveShadow
         >
-          <planeGeometry args={map.size} />
+          <planeGeometry args={map?.size || [15, 15]} />
           <meshStandardMaterial color="#f0f0f0" />
         </mesh>
       )}
