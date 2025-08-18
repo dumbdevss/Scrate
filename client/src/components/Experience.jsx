@@ -29,9 +29,14 @@ export const Experience = ({ onFrameClick}) => {
   const {origin} = useAuth();
   const scene = useThree((state) => state.scene);
   const [user] = useAtom(userAtom);
-
+  useEffect(() => {
+    if(map && map.items && map.items.length && map.items.length > 0 ){
+      setItems(map.items)
+    }
+  },[map])
   const onPlaneClicked = async(e) => {
     if (!buildMode) {
+      console.log("Not in build mode");
       const character = scene.getObjectByName(`character-${user}`);
       if (!character) {
         return;
@@ -43,7 +48,9 @@ export const Experience = ({ onFrameClick}) => {
       );
     } else {
       if (draggedItem !== null) {
+        console.log("In build mode", draggedItem);
         if (canDrop) {
+          console.log("Item can be dropped");
           setItems((prev) => {
             const newItems = [...prev];
             delete newItems[draggedItem].tmp;
@@ -52,6 +59,7 @@ export const Experience = ({ onFrameClick}) => {
             return newItems;
           });
         }
+        console.log("Ghus rha h ")
         const newItems = items;
         console.log(newItems[draggedItem])
         // need to update blockchain coordinates here
@@ -176,7 +184,7 @@ export const Experience = ({ onFrameClick}) => {
         gridPosition: [0, 0],
         tmp: true,
         link: "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/640px-Flag_of_India.svg.png",
-        by: localStorage.getItem("address"),
+        by: localStorage.getItem("camp-sdk:wallet-address"),
       },
     ]);
     setDraggedItem(items.length);
@@ -217,7 +225,7 @@ export const Experience = ({ onFrameClick}) => {
             item={item}
             onClick={(e) => {
               if (buildMode) {
-                if (item.by == localStorage.getItem("address")) {
+                if (item.by == localStorage.getItem("camp-sdk:wallet-address")) {
                   setDraggedItem((prev) => (prev === null ? idx : prev));
                   setDraggedItemRotation(item.rotation || 0);
                 } else {

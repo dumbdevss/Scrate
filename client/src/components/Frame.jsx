@@ -3,12 +3,13 @@ import { useLoader } from '@react-three/fiber'
 import { useGLTF, Text } from '@react-three/drei'
 import * as THREE from 'three'
 
-export function Frame({ imgLink, rotation, item, ...props }) {
+export function Frame({ imgLink = '', rotation, item, ...props }) {
   const { nodes, materials } = useGLTF('./models/items/frame.glb')
-  const texture = useLoader(THREE.TextureLoader, imgLink)
-  if(item.sold==true){
+  
+  if(item.sold==true || !imgLink || imgLink === null){
     return (<></>)
   }else{
+    const texture = useLoader(THREE.TextureLoader, imgLink)
     return (
       <group {...props} dispose={null} rotation-y={((rotation || 0) * Math.PI) / 2}>
         <group

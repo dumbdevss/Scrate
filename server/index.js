@@ -41,7 +41,7 @@ const privateKey =
 const alchemyProvider = new JsonRpcProvider(
   "https://rpc.basecamp.t.raas.gelato.cloud"
 );
-const contractAddress = "0x254147C7C0a9BB490b4499c839F6a5f5DefB17DB";
+const contractAddress = "0xa779B2594Fb4fEFaf8Ac7c9c74d386a023D3354b";
 
 // console.log(abi.abi)
 const signer = new ethers.Wallet(privateKey, alchemyProvider);
@@ -52,34 +52,6 @@ if (contract) {
 } else {
   console.error("Failed to create contract instance");
 }
-const fetchAllPosts = async () => {
-  const posts = await contract.getAllPosts();
-  posts.map(async (post, i) => {
-    const imgResponse = await fetch(post[1]);
-    const imgData = await imgResponse.json();
-    const obj = {
-      ...items.frame,
-      gridPosition: [Number(post[8]), Number(post[9])],
-      by: post[2],
-      likes: Number(post[7]),
-      rotation: Number(post[10]),
-      link: imgData.img,
-      title: imgData.title,
-      price: imgData.price,
-      auctionActive: post[5],
-      sold: post[6],
-      maxBidder: post[4],
-      currentBid: Number(post[3]),
-      id: Number(post[0]),
-    };
-    console.log(obj);
-    map.items.push(obj);
-  });
-};
-fetchAllPosts()
-
-const characters = [];
-
 const items = {
   chineseMonk: {
     name: "chineseMonk",
@@ -717,6 +689,75 @@ const map = {
     // },
   ],
 };
+const fetchAllPosts = async () => {
+  const posts = await contract.getAllPosts();
+  console.log("Fetched posts:", posts.length);
+  // posts.map(async (post, i) => {
+  //   const imgResponse = await fetch(post[1]);
+  //   const imgData = await imgResponse.json();
+  //   const obj = {
+  //     ...items.frame,
+  //     gridPosition: [Number(post[8]), Number(post[9])],
+  //     by: post[2],
+  //     likes: Number(post[7]),
+  //     rotation: Number(post[10]),
+  //     link: imgData.img,
+  //     title: imgData.title,
+  //     price: imgData.price,
+  //     auctionActive: post[5],
+  //     sold: post[6],
+  //     maxBidder: post[4],
+  //     currentBid: Number(post[3]),
+  //     id: Number(post[0]),
+  //   };
+  //   // console.log(obj);
+  //   map.items.push(obj);
+  // });
+  for(const post of posts){
+    const postID = Number(post[0]);
+      const itemIndex = map.items.findIndex(item => item.name === "frame" && item.id === postID);
+      if (itemIndex !== -1) {
+        map.items[itemIndex] = {
+          ...map.items[itemIndex],
+          by: post[2],
+          likes: Number(post[7]),
+          rotation: Number(post[10]),
+          auctionActive: post[5],
+          sold: post[6],
+          maxBidder: post[4],
+          currentBid: Number(post[3]),
+          gridPosition: [Number(post[8]), Number(post[9])],
+          id: postID,
+        };
+        continue;
+      }
+    const imgResponse = await fetch(post[1]);
+    const imgData = await imgResponse.json();
+    const obj = {
+      ...items.frame,
+      gridPosition: [Number(post[8]), Number(post[9])],
+      by: post[2],
+      likes: Number(post[7]),
+      rotation: Number(post[10]),
+      link: imgData.img || '',
+      title: imgData.title,
+      price: imgData.price,
+      auctionActive: post[5],
+      sold: post[6],
+      maxBidder: post[4],
+      currentBid: Number(post[3]),
+      id: Number(post[0]),
+    };
+    // console.log(obj);
+    map.items.push(obj);
+  }
+  console.log("fetchAllPosts completed");
+  console.log("Map items:", map.items.length);
+};
+// await fetchAllPosts()
+
+const characters = [];
+
 
 const grid = new pathfinding.Grid(
   map.size[0] * map.gridDivision,
@@ -741,8 +782,8 @@ const updateGrid = () => {
       grid.setWalkableAt(x, y, true);
     }
   }
-
   map.items.forEach((item) => {
+    // console.log(item.name)
     if (item.walkable || item.wall) {
       return;
     }
@@ -780,9 +821,9 @@ const generateRandomHexColor = () => {
   return "#" + Math.floor(Math.random() * 16777215).toString(16);
 };
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   console.log("user connected");
-  fetchAllPosts();
+  await fetchAllPosts();
 
   characters.push({
     id: socket.id,
@@ -793,7 +834,9 @@ io.on("connection", (socket) => {
     avatarUrl: "https://models.readyplayer.me/64f0265b1db75f90dcfd9e2c.glb",
     address: "",
   });
-
+  map.items.forEach((item) => {
+    console.log(item.name);
+  });
   socket.emit("hello", {
     map,
     characters,
