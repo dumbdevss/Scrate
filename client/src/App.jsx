@@ -11,7 +11,7 @@ import StoreWalls from "./components/walls/Storewalls";
 import StoreWalls2 from "./components/walls/Storewalls2";
 import StoreWalls3 from "./components/walls/Storewalls3";
 import StoreWalls4 from "./components/walls/Storewalls4";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@campnetwork/origin/react";
 import { buyArt, contractABI, contractAddress, getBidders, getMaxBid, likeArt, placeBid, toggleAuction } from "./utils/utils";
@@ -109,98 +109,136 @@ function App() {
 
       // Optionally, fetch the updated number of likes
     } catch (error) {
+      toast.error("Error liking art. Please try again.", error.message || '');
       console.error("Error liking art:", error);
     }
   };
 
   return (
     <>
+      <style jsx global>{`
+        .ant-modal .ant-modal-content {
+          background-color: #000000 !important;
+        }
+        .ant-modal .ant-modal-header {
+          background-color: #000000 !important;
+          border-bottom: 1px solid #333333 !important;
+        }
+        .ant-modal .ant-modal-close {
+          color: #ffffff !important;
+        }
+        .ant-modal .ant-modal-close:hover {
+          background-color: #333333 !important;
+        }
+        .ant-modal .ant-modal-footer {
+          background-color: #000000 !important;
+          border-top: 1px solid #333333 !important;
+        }
+      `}</style>
       <ToastContainer />
       <Navbar />
       <Modal
-        title={<span className="text-gray-200 font-semibold">Art Details</span>}
+        title={
+          <span className="text-white text-lg font-semibold">Art Details</span>
+        }
         open={isModalVisible}
-        // onOk={handleOk}
         onCancel={handleCancel}
-        className="bg-gray-900 border-0 shadow-xl" // Modal container styling
-        footer={null} // Disable default footer
+        className="dark-modal"
+        maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+        width={500}
+        styles={{
+          header: { 
+            backgroundColor: '#000000', 
+            borderBottom: '1px solid #333333',
+            marginBottom: 0
+          },
+          body: { 
+            backgroundColor: '#000000',
+            padding: '24px'
+          },
+          content: {
+            backgroundColor: '#000000',
+            border: '1px solid #333333'
+          }
+        }}
+        footer={null}
       >
-        <div className="p-4 bg-gray-800 rounded-lg text-white">
+        <div className="space-y-6">
           {/* Art Title */}
-          <p className="text-xl font-bold mb-2">Title: {title}</p>
-
-          {/* Art Price */}
-          <p className="text-lg font-semibold mb-4">Price: {price} ETH</p>
-
-          {/* Owner Address */}
-          <p className="text-sm text-gray-400 mb-4">Owner: {owner}</p>
-
-          {/* Bid Section */}
-          <div className="mt-4 flex items-center">
-            <input
-              type="text"
-              className="border border-gray-600 bg-gray-700 text-white rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Enter your bid"
-              onChange={(e) => setBid(e.target.value)}
-            />
-            <button
-              className="ml-2 bg-gray-900 text-white font-bold py-2 px-3 rounded-md hover:bg-gray-800 transition duration-300"
-              onClick={() => handleBid(id, bid)}
-            >
-              Bid
-            </button>
+          <div className="border-b border-gray-700 pb-4">
+            <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+            <p className="text-lg font-semibold text-white">Price: {price} ETH</p>
+            <p className="text-sm text-gray-400 mt-2">Owner: {owner}</p>
           </div>
 
-          {/* Buttons Section */}
-          <div className="mt-4 space-y-2">
-            {/* Buy Button */}
+          {/* Bid Section */}
+          <div className="space-y-3">
+            <label className="block text-white text-sm font-medium">
+              Place Your Bid (ETH)
+            </label>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                className="flex-1 px-3 py-2.5 bg-black border border-gray-700 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200"
+                placeholder="Enter bid amount"
+                onChange={(e) => setBid(e.target.value)}
+              />
+              <button
+                className="px-6 py-2.5 bg-white text-black font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200"
+                onClick={() => handleBid(id, bid)}
+              >
+                Place Bid
+              </button>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
             <button
-              className="bg-gray-900 text-white font-bold py-2 px-3 rounded-md hover:bg-gray-800 transition duration-300 w-full"
+              className="w-full bg-white text-black font-medium py-2.5 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200"
               onClick={() => handleBuy(id, price)}
             >
               Buy Now
             </button>
 
-            {/* Toggle Auction Button */}
-            <button
-              className="bg-gray-900 text-white font-bold py-2 px-3 rounded-md hover:bg-gray-800 transition duration-300 w-full"
-              onClick={() => handleToggle(id)}
-            >
-              Toggle Auction
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                className="bg-black text-white font-medium py-2.5 px-4 rounded-md border border-gray-700 hover:bg-gray-900 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-200"
+                onClick={() => handleToggle(id)}
+              >
+                Toggle Auction
+              </button>
 
-            {/* View Bidders Button */}
-            <button
-              className="bg-gray-900 text-white font-bold py-2 px-3 rounded-md hover:bg-gray-800 transition duration-300 w-full"
-              onClick={() => handleGetBidders(id)}
-            >
-              View Bidders
-            </button>
+              <button
+                className="bg-black text-white font-medium py-2.5 px-4 rounded-md border border-gray-700 hover:bg-gray-900 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-200"
+                onClick={() => handleGetBidders(id)}
+              >
+                View Bidders
+              </button>
+            </div>
 
-            {/* View Max Bid Button */}
             <button
-              className="bg-gray-900 text-white font-bold py-2 px-3 rounded-md hover:bg-gray-800 transition duration-300 w-full"
+              className="w-full bg-black text-white font-medium py-2.5 px-4 rounded-md border border-gray-700 hover:bg-gray-900 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-200"
               onClick={() => handleGetMaxBid(id)}
             >
               {maxBid ? `Max Bid: ${maxBid} ETH` : "View Max Bid"}
             </button>
           </div>
 
-          {/* Like Button */}
-          <div className="mt-4 flex items-center space-x-2">
+          {/* Like Section */}
+          <div className="pt-4 border-t border-gray-700">
             <button
-              className="flex items-center bg-red-500 text-white font-bold py-2 px-3 rounded-md hover:bg-red-500 transition duration-300"
+              className="flex items-center justify-center w-full bg-black text-white font-medium py-2.5 px-4 rounded-md border border-gray-700 hover:bg-gray-900 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-white transition-all duration-200"
               onClick={() => handleLike(id)}
             >
-              {/* Heart SVG */}
               <svg
-                className="w-5 h-5 fill-current text-white mr-1"
+                className="w-5 h-5 fill-current text-white mr-2"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
               >
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               </svg>
-              <span>{likes}</span>
+              <span>Like ({likes})</span>
             </button>
           </div>
         </div>
@@ -208,28 +246,64 @@ function App() {
         {/* Bidders Modal */}
         <Modal
           title={
-            <span className="text-gray-800 font-bold underline">Bidders List</span> // Keep the title light for contrast
+            <span className="text-white text-lg font-semibold">Bidders List</span>
           }
           open={isBiddersModalVisible}
           onOk={() => setIsBiddersModalVisible(false)}
           onCancel={() => setIsBiddersModalVisible(false)}
-          className="bg-gray-800 border-0 shadow-xl" // Darker background for contrast
+          className="dark-modal"
+          maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+          width={500}
+          styles={{
+            header: { 
+              backgroundColor: '#000000', 
+              borderBottom: '1px solid #333333',
+              marginBottom: 0
+            },
+            body: { 
+              backgroundColor: '#000000',
+              padding: '24px'
+            },
+            content: {
+              backgroundColor: '#000000',
+              border: '1px solid #333333'
+            }
+          }}
+          footer={
+            <div className="flex justify-end">
+              <button
+                className="bg-white text-black font-medium py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200"
+                onClick={() => setIsBiddersModalVisible(false)}
+              >
+                Close
+              </button>
+            </div>
+          }
         >
-          <div className="text-black">
-            {" "}
-            <p className="text-lg font-semibold">Art ID: {id}</p>
-            <p className="mt-4">List of Bidders:</p>
-            <ul className="list-disc ml-4 mt-2">
-              {bidders.length > 0 ? (
-                bidders.map((bidder, index) => (
-                  <li key={index} className="mt-2">
-                    {bidder}
-                  </li>
-                ))
-              ) : (
-                <p>No bidders found</p>
-              )}
-            </ul>
+          <div className="space-y-4">
+            <div className="border-b border-gray-700 pb-3">
+              <p className="text-lg font-semibold text-white">Art ID: {id}</p>
+            </div>
+            
+            <div>
+              <h4 className="text-white font-medium mb-3">Active Bidders:</h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {bidders.length > 0 ? (
+                  bidders.map((bidder, index) => (
+                    <div 
+                      key={index} 
+                      className="bg-black border border-gray-700 rounded-md px-3 py-2"
+                    >
+                      <span className="text-white text-sm font-mono">{bidder}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-400">No bidders found for this artwork</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </Modal>
       </Modal>

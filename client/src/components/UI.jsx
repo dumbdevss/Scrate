@@ -25,6 +25,7 @@ export const UI = () => {
     draggedItemRotationAtom
   );
   const [avatarMode, setAvatarMode] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // State for controlling the Ant Design modal
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -48,10 +49,14 @@ export const UI = () => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-
+    setLoading(true);
     
     try {
+      if(!img) {
+        toast.error("Please upload an image");
+        setLoading(false);
+        return;
+      }
       // Prepare the data for IPFS upload
       const data = JSON.stringify({ title, price, img });
       console.log("Uploading data to IPFS:", data);
@@ -88,22 +93,11 @@ export const UI = () => {
       console.log("Transaction Success:", tx2);
       fetchArtPieces()
 
-  
-      // Create a new item for the map
-      // const newItem = {
-      //   name: "frame",
-      //   size: [1, 4],
-      //   gridPosition: [0, 0],
-      //   tmp: true,
-      //   link: img,
-      //   by: localStorage.getItem("address"),
-      // };
-
       const newItem = {
         name: 'frame',
         size: [ 1, 4 ],
         gridPosition: [ vals.x, vals.y ],
-        by: localStorage.getItem("address"),
+        by: localStorage.getItem("camp-sdk:wallet-address"),
         likes: 0,
         rotation: vals.rotation,
         link: img,
@@ -126,11 +120,13 @@ export const UI = () => {
       // Close the modal
       toast.success("Successfully added new Art");
       setIsModalVisible(false);
-  
+
     } catch (error) {
       console.error("Error during the submission process:", error);
       // window.alert("Minting error: " + error.message || "Unknown error occurred");
       toast.error("Error during the submission process");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -149,7 +145,7 @@ export const UI = () => {
       case 1:
         return { x:toUse, y:29, rotation: 1 };
       case 2:
-        return { x:29, y:30-toUse, rotation: 2 };
+        return { x:29, y:30-toUse-4, rotation: 2 };
       case 3:
         return { x:30-toUse, y:0, rotation: 3 };
       default:
@@ -182,6 +178,8 @@ export const UI = () => {
   const handleImageChange =async (e) => {
     e.preventDefault()
     const file = e.target.files[0];
+    if(!file) return;
+    setLoading(true);
     if (typeof file !== "undefined") {
       try {
         const formData = new FormData();
@@ -202,6 +200,8 @@ export const UI = () => {
         setImg(`https://ipfs.io/ipfs/${resData.IpfsHash}`);
       } catch (error) {
         window.alert(error);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -225,6 +225,21 @@ export const UI = () => {
 
   return (
     <>
+      <style jsx global>{`
+        .ant-modal .ant-modal-content {
+          background-color: #000000 !important;
+        }
+        .ant-modal .ant-modal-header {
+          background-color: #000000 !important;
+          border-bottom: 1px solid #333333 !important;
+        }
+        .ant-modal .ant-modal-close {
+          color: #ffffff !important;
+        }
+        .ant-modal .ant-modal-close:hover {
+          background-color: #333333 !important;
+        }
+      `}</style>
       {/* Avatar Creator */}
       {avatarMode && (
         <AvatarCreator
@@ -242,57 +257,89 @@ export const UI = () => {
       {/* Ant Design Modal */}
       <Modal
   title={
-    <span className="text-2xl font-bold text-gray-800">Enter Link</span>
+    <span className="text-xl font-semibold text-white">Upload New Art</span>
   }
   open={isModalVisible}
   onOk={handleSubmit} // Trigger handleSubmit on Ok
   onCancel={handleCancel}
-  className="p-6 rounded-lg shadow-lg"
-  footer={null} // Remove the default footer buttons
+  className="dark-modal"
+  maskStyle={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+  width={500}
+  styles={{
+    header: { 
+      backgroundColor: '#000000', 
+      borderBottom: '1px solid #333333',
+      marginBottom: 0
+    },
+    body: { 
+      backgroundColor: '#000000',
+      padding: '24px'
+    },
+    content: {
+      backgroundColor: '#000000',
+      border: '1px solid #333333'
+    }
+  }}
+  footer={null}
 >
-  <div className="space-y-4">
-    <div>
-      <label className="block text-gray-700 text-sm font-medium mb-1">
+  <div className="space-y-6">
+    <div className="space-y-2">
+      <label className="block text-white text-sm font-medium">
         Title
       </label>
-      <Input
-        placeholder="Enter Title"
-        value={title}
+      <input
+        type="text"
+        placeholder="Enter artwork title"
+        value={title || ''}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+        className="w-full px-3 py-2.5 bg-black border border-gray-700 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200"
       />
     </div>
 
-    <div>
-      <label className="block text-gray-700 text-sm font-medium mb-1">
-        Price
+    <div className="space-y-2">
+      <label className="block text-white text-sm font-medium">
+        Price (ETH)
       </label>
-      <Input
-        placeholder="Enter Price"
-        value={price}
+      <input
+        type="text"
+        placeholder="0.001"
+        value={price || ''}
         onChange={(e) => setPrice(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
+        className="w-full px-3 py-2.5 bg-black border border-gray-700 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200"
       />
     </div>
 
-    <div>
-      <label className="block text-gray-700 text-sm font-medium mb-1">
+    <div className="space-y-2">
+      <label className="block text-white text-sm font-medium">
         Upload Image
       </label>
-      <Input
-        type="file"
-        onChange={handleImageChange}
-        className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-800"
-      />
+      <div className="relative">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="w-full px-3 py-2.5 bg-black border border-gray-700 text-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-white file:text-black hover:file:bg-gray-200 file:cursor-pointer cursor-pointer focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200"
+        />
+      </div>
     </div>
 
-    <Button
-      type="primary"
+    <button
       onClick={handleSubmit}
-      className="w-full mt-4 bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-900 transition-all"
+      disabled={loading}
+      className="w-full bg-white text-black font-medium py-3 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
     >
-      Submit
-    </Button>
+      {loading ? (
+        <>
+          <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Uploading...
+        </>
+      ) : (
+        'Upload Art'
+      )}
+    </button>
   </div>
 </Modal>
 
@@ -301,7 +348,7 @@ export const UI = () => {
           
           {(buildMode || shopMode) && draggedItem === null && (
             <button
-              className="p-4 rounded-full bg-slate-500 text-white drop-shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+              className="p-4 rounded-full bg-black border border-gray-700 text-white shadow-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() => {
                 shopMode ? setShopMode(false) : setBuildMode(false);
               }}
@@ -326,7 +373,7 @@ export const UI = () => {
           {!buildMode && !shopMode && (
             <>
             <button
-              className="p-4 rounded-full bg-slate-500 text-white drop-shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+              className="p-4 rounded-full bg-black border border-gray-700 text-white shadow-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() => {
                 showModal();
               }}
@@ -347,7 +394,7 @@ export const UI = () => {
               </svg>
             </button>
             <button
-              className="p-4 rounded-full bg-slate-500 text-white drop-shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+              className="p-4 rounded-full bg-black border border-gray-700 text-white shadow-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() => setAvatarMode(true)}
             >
               <svg
@@ -369,7 +416,7 @@ export const UI = () => {
           {/* DANCE Button */}
           {!buildMode && !shopMode && (
             <button
-              className="p-4 rounded-full bg-slate-500 text-white drop-shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+              className="p-4 rounded-full bg-black border border-gray-700 text-white shadow-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() => socket.emit("dance")}
             >
               <svg
@@ -391,7 +438,7 @@ export const UI = () => {
           {/* BUILD Button */}
           {!buildMode && !shopMode && (
             <button
-              className="p-4 rounded-full bg-slate-500 text-white drop-shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+              className="p-4 rounded-full bg-black border border-gray-700 text-white shadow-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() => setBuildMode(true)}
             >
               <svg
@@ -412,7 +459,7 @@ export const UI = () => {
           )}
           {buildMode && !shopMode && draggedItem !== null && (
             <button
-              className="p-4 rounded-full bg-slate-500 text-white drop-shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+              className="p-4 rounded-full bg-black border border-gray-700 text-white shadow-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() =>
                 setDraggedItemRotation(
                   draggedItemRotation === 3 ? 0 : draggedItemRotation + 1
@@ -438,7 +485,7 @@ export const UI = () => {
           {/* CANCEL */}
           {buildMode && !shopMode && draggedItem !== null && (
             <button
-              className="p-4 rounded-full bg-slate-500 text-white drop-shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+              className="p-4 rounded-full bg-black border border-gray-700 text-white shadow-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white"
               onClick={() => setDraggedItem(null)}
             >
               <svg

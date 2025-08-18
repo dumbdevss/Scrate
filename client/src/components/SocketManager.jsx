@@ -2,7 +2,7 @@ import { atom, useAtom } from 'jotai'
 import { useEffect } from 'react'
 import { io } from 'socket.io-client'
 
-export const socket = io('https://imagine-dlv3.onrender.com')
+export const socket = io('http://localhost:8080')
 export const charactersAtom = atom([])
 export const mapAtom = atom(null)
 export const userAtom = atom(null)
@@ -22,6 +22,7 @@ export const SocketManager = () => {
     }
 
     function onHello(value) {
+      console.log("Inside hello ", value)
       setMap(value.map)
       setUser(value.id)
       setItems(value.items)
