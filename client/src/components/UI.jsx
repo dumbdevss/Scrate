@@ -6,8 +6,8 @@ import { Modal, Button ,Input} from "antd"; // Import Ant Design Modal and Butto
 import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuth } from "@campnetwork/origin/react";
 import { contractABI, contractAddress, getAllPosts, pinataApi, pinataSecret, setCoordinates, totalPosts, uploadArt } from "../utils/utils";
+import { useWalletInterface } from "../services/wallets/useWalletInterface";
 
 // Atoms
 export const buildModeAtom = atom(false);
@@ -34,7 +34,7 @@ export const UI = () => {
   const [img,setImg] = useState(null)
   const [uri,setURI] = useState(null)
   const [artPieces,setArtPieces] = useState([])
-  const {origin} = useAuth();
+  const { accountId, walletInterface } = useWalletInterface();
   // Functions to show and hide modal
   const showModal = () => {
     setIsModalVisible(true);
@@ -82,22 +82,27 @@ export const UI = () => {
       console.log(ipfsURI)
   
       // Interact with the smart contract
+      if (!walletInterface) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
       console.log("Calling contract to mint/upload art...");
-      const tx = await origin.callContractMethod(contractAddress, contractABI, uploadArt, [ipfsURI])
-      console.log("Transaction Success:", tx);
-      const count = await origin.callContractMethod(contractAddress, contractABI, totalPosts, [])
-      console.log("Total Posts:", count);
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Upload art - IPFS URI:", ipfsURI);
+      toast.info("Contract interaction not yet implemented");
+      
+      // Mock data for now
+      const count = artPieces.length + 1;
       const vals = generateFramePos(Number(count));
       console.log(vals)
-      const tx2 = await origin.callContractMethod(contractAddress, contractABI, setCoordinates, [Number(count), vals.x, vals.y, vals.rotation])
-      console.log("Transaction Success:", tx2);
       fetchArtPieces()
 
       const newItem = {
         name: 'frame',
         size: [ 1, 4 ],
         gridPosition: [ vals.x, vals.y ],
-        by: localStorage.getItem("camp-sdk:wallet-address"),
+        by: accountId || "unknown",
         likes: 0,
         rotation: vals.rotation,
         link: img,
@@ -208,19 +213,20 @@ export const UI = () => {
   }
   const fetchArtPieces = async () => {
     try {
-      if(origin == null) return;
-      // Call the contract's getAllPosts function
-      const artPieces = await origin.callContractMethod(contractAddress, contractABI, getAllPosts, [])
-      setArtPieces(artPieces)
-      console.log("Fetched Art Pieces:", artPieces);
+      if(!walletInterface) return;
+      
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Fetching art pieces...");
+      // Mock empty array for now
+      setArtPieces([]);
+      console.log("Fetched Art Pieces: []");
     } catch (error) {
       console.error("Error fetching art pieces:", error);
-      throw new Error("Failed to fetch art pieces.");
     }
   };
   useEffect(()=>{
     fetchArtPieces()
-  },[origin])
+  },[walletInterface])
   
 
   return (

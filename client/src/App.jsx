@@ -13,8 +13,8 @@ import StoreWalls3 from "./components/walls/Storewalls3";
 import StoreWalls4 from "./components/walls/Storewalls4";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useAuth } from "@campnetwork/origin/react";
 import { buyArt, contractABI, contractAddress, getBidders, getMaxBid, likeArt, placeBid, toggleAuction } from "./utils/utils";
+import { useWalletInterface } from "./services/wallets/useWalletInterface";
 
 function App() {
   const [shopMode] = useAtom(shopModeAtom);
@@ -42,35 +42,52 @@ function App() {
   const [bid, setBid] = useState(null);
   const [title, setTitle] = useState(null);
   const [owner, setOwner] = useState("");
-  const {origin} = useAuth();
+  const { accountId, walletInterface } = useWalletInterface();
 
 
   const handleBuy = async (id, price) => {
     try {
-      // Ensure that state.contract is availabl
-
-      // Parse the price from Ether to Wei
-      const tx = await origin.callContractMethod(contractAddress, contractABI, buyArt, [id], {value: price});
-
-      console.log("Bought Successfully!!", tx);
+      if (!walletInterface) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Buy art - ID:", id, "Price:", price);
+      toast.info("Contract interaction not yet implemented");
     } catch (error) {
       console.error("Error buying art:", error);
+      toast.error("Error buying art");
     }
   };
   const handleBid = async (id, bid) => {
     try {
-      const tx = await origin.callContractMethod(contractAddress, contractABI, placeBid, [id], {value: BigInt(bid * 1e18)});
-      console.log("Bid Successfully!!", tx);
+      if (!walletInterface) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Place bid - ID:", id, "Bid:", bid);
+      toast.info("Contract interaction not yet implemented");
     } catch (error) {
-      console.log(error);
+      console.error("Error placing bid:", error);
+      toast.error("Error placing bid");
     }
   };
   const handleToggle = async (id) => {
     try {
-      const tx = await origin.callContractMethod(contractAddress, contractABI, toggleAuction, [id]);
-      console.log("Auction Toggled", tx);
+      if (!walletInterface) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Toggle auction - ID:", id);
+      toast.info("Contract interaction not yet implemented");
     } catch (error) {
-      console.log(error);
+      console.error("Error toggling auction:", error);
+      toast.error("Error toggling auction");
     }
   };
   const [bidders, setBidders] = useState([]);
@@ -78,39 +95,53 @@ function App() {
 
   const handleGetBidders = async (id) => {
     try {
-      const fetchedBidders = await origin.callContractMethod(contractAddress, contractABI, getBidders, [id]);
-      setBidders(fetchedBidders);
+      if (!walletInterface) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Get bidders - ID:", id);
+      setBidders([]);
       setIsBiddersModalVisible(true);
-
-      console.log("Bidders fetched", fetchedBidders);
+      toast.info("Contract interaction not yet implemented");
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching bidders:", error);
+      toast.error("Error fetching bidders");
     }
   };
   const [maxBid, setMaxBid] = useState(null); // To store the maximum bid
   const [isMaxBidModalVisible, setIsMaxBidModalVisible] = useState(false); // Control the visibility of max bid modal
   const handleGetMaxBid = async (id) => {
     try {
-      const maxBidInWei = await origin.callContractMethod(contractAddress, contractABI, getMaxBid, [id]);
-
-      // After fetching, store the max bid and open the modal
-      setMaxBid(maxBidInWei);
+      if (!walletInterface) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Get max bid - ID:", id);
+      setMaxBid("0");
       setIsMaxBidModalVisible(true);
-
-      console.log("Max bid fetched:", maxBidInWei);
+      toast.info("Contract interaction not yet implemented");
     } catch (error) {
       console.error("Error fetching max bid:", error);
+      toast.error("Error fetching max bid");
     }
   };
   const handleLike = async (id) => {
     try {
-      const tx = await origin.callContractMethod(contractAddress, contractABI, likeArt, [id]);
-      console.log("Art liked successfully!", tx);
-
-      // Optionally, fetch the updated number of likes
+      if (!walletInterface) {
+        toast.error("Please connect your wallet first");
+        return;
+      }
+      
+      // TODO: Implement contract interaction with wallet interface
+      console.log("Like art - ID:", id);
+      toast.info("Contract interaction not yet implemented");
     } catch (error) {
-      toast.error("Error liking art. Please try again.", error.message || '');
       console.error("Error liking art:", error);
+      toast.error("Error liking art");
     }
   };
 

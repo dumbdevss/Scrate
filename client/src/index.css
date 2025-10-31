@@ -10,3 +10,31 @@
 body {
   margin: 0;
 }
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+.builtOnHederaSVG  {
+  height: 60px;
+  width: auto;
+}
+
+.footer {
+  padding-left: 24px;
+  padding-right: 24px;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  margin-top: auto;
+  background-color:  #222222;
+}
+
+.hbarLogoImg {
+  width: 36px;
+  height: auto;
+}
+
+.walletLogoImage {
+  width: 30px;
+  height: auto;
+}

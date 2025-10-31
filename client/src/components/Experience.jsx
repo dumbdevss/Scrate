@@ -15,8 +15,8 @@ import {
 } from "./UI";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuth } from "@campnetwork/origin/react";
 import { contractABI, contractAddress, setCoordinates } from "../utils/utils";
+import { useWalletInterface } from "../services/wallets/useWalletInterface";
 export const Experience = ({ onFrameClick}) => {
   const [buildMode, setBuildMode] = useAtom(buildModeAtom);
   const [shopMode, setShopMode] = useAtom(shopModeAtom);
@@ -26,7 +26,7 @@ export const Experience = ({ onFrameClick}) => {
   const [onFloor, setOnFloor] = useState(false);
   useCursor(onFloor);
   const { vector3ToGrid, gridToVector3 } = useGrid();
-  const {origin} = useAuth();
+  const { accountId, walletInterface } = useWalletInterface();
   const scene = useThree((state) => state.scene);
   const [user] = useAtom(userAtom);
   useEffect(() => {
@@ -65,9 +65,15 @@ export const Experience = ({ onFrameClick}) => {
         // need to update blockchain coordinates here
         setDraggedItem(null);
         const params = [newItems[draggedItem].id, newItems[draggedItem].gridPosition[0], newItems[draggedItem].gridPosition[1], newItems[draggedItem].rotation]
-        const tx = await origin.callContractMethod(contractAddress, contractABI, setCoordinates, params)
-        console.log("Coordinates set successfully. Hash:",tx)
-        toast.success("Position changed successfully");
+        
+        if (!walletInterface) {
+          toast.error("Please connect your wallet first");
+          return;
+        }
+        
+        // TODO: Implement contract interaction with wallet interface
+        console.log("Set coordinates - Params:", params);
+        toast.info("Contract interaction not yet implemented");
       }
     }
   };
@@ -184,7 +190,7 @@ export const Experience = ({ onFrameClick}) => {
         gridPosition: [0, 0],
         tmp: true,
         link: "https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/640px-Flag_of_India.svg.png",
-        by: localStorage.getItem("camp-sdk:wallet-address"),
+        by: accountId || "unknown",
       },
     ]);
     setDraggedItem(items.length);
@@ -225,7 +231,7 @@ export const Experience = ({ onFrameClick}) => {
             item={item}
             onClick={(e) => {
               if (buildMode) {
-                if (item.by == localStorage.getItem("camp-sdk:wallet-address")) {
+                if (item.by == accountId) {
                   setDraggedItem((prev) => (prev === null ? idx : prev));
                   setDraggedItemRotation(item.rotation || 0);
                 } else {
