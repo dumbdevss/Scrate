@@ -38,7 +38,7 @@ const io = new Server(server, {
 // });
 
 const MY_ACCOUNT_ID = AccountId.fromString("0.0.6808065");
-const MY_PRIVATE_KEY = PrivateKey.fromStringECDSA("");
+const MY_PRIVATE_KEY = PrivateKey.fromStringECDSA("0xf08793e504dd4ae6ee747bb9a3dc82a6a3bd4444891c3541f67afffab6803460");
 
 // Pre-configured client for testnet
 const client = Client.forTestnet();
