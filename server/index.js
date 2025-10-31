@@ -1,6 +1,7 @@
 import pathfinding from "pathfinding";
 import { Server } from "socket.io";
 // import socketIO from "socket.io";
+import { ContractCallQuery, AccountId, PrivateKey, Client } from "@hashgraph/sdk";
 import { ethers } from "ethers";
 import { JsonRpcProvider } from "ethers";
 import abi from "../client/src/abi/NFTGallery.json" with { type: "json" };
@@ -35,6 +36,28 @@ const io = new Server(server, {
 
 // const io = new Server({
 // });
+
+const MY_ACCOUNT_ID = AccountId.fromString("0.0.6808065");
+const MY_PRIVATE_KEY = PrivateKey.fromStringECDSA("");
+
+// Pre-configured client for testnet
+const client = Client.forTestnet();
+
+//Set the operator with the account ID and private key
+client.setOperator(MY_ACCOUNT_ID, MY_PRIVATE_KEY);
+
+//Contract call query
+const contractCallQuery = new ContractCallQuery()
+  .setContractId('0.0.7173071') //Fill in the contract ID
+  .setGas(300000)
+  .setFunction("getAllPosts"); //Fill in the function name
+
+//Sign with the client operator private key to pay for the query and submit the query to a Hedera network
+const contractCallResult = await contractCallQuery.execute(client);
+
+const messageContractCall = contractCallResult.getString(0);
+
+console.log(messageContractCall);
 
 const privateKey =
   "440e0d85a55d3f9bb901900c62bc33f77570c32b640b3e881e3422c34a199ca7";
@@ -713,24 +736,24 @@ const fetchAllPosts = async () => {
   //   // console.log(obj);
   //   map.items.push(obj);
   // });
-  for(const post of posts){
+  for (const post of posts) {
     const postID = Number(post[0]);
-      const itemIndex = map.items.findIndex(item => item.name === "frame" && item.id === postID);
-      if (itemIndex !== -1) {
-        map.items[itemIndex] = {
-          ...map.items[itemIndex],
-          by: post[2],
-          likes: Number(post[7]),
-          rotation: Number(post[10]),
-          auctionActive: post[5],
-          sold: post[6],
-          maxBidder: post[4],
-          currentBid: Number(post[3]),
-          gridPosition: [Number(post[8]), Number(post[9])],
-          id: postID,
-        };
-        continue;
-      }
+    const itemIndex = map.items.findIndex(item => item.name === "frame" && item.id === postID);
+    if (itemIndex !== -1) {
+      map.items[itemIndex] = {
+        ...map.items[itemIndex],
+        by: post[2],
+        likes: Number(post[7]),
+        rotation: Number(post[10]),
+        auctionActive: post[5],
+        sold: post[6],
+        maxBidder: post[4],
+        currentBid: Number(post[3]),
+        gridPosition: [Number(post[8]), Number(post[9])],
+        id: postID,
+      };
+      continue;
+    }
     const imgResponse = await fetch(post[1]);
     const imgData = await imgResponse.json();
     const obj = {
@@ -796,8 +819,8 @@ const updateGrid = () => {
         const gridX = item.gridPosition[0] + x;
         const gridY = item.gridPosition[1] + y;
         // Check bounds before setting walkable
-        if (gridX >= 0 && gridX < map.size[0] * map.gridDivision && 
-            gridY >= 0 && gridY < map.size[1] * map.gridDivision) {
+        if (gridX >= 0 && gridX < map.size[0] * map.gridDivision &&
+          gridY >= 0 && gridY < map.size[1] * map.gridDivision) {
           grid.setWalkableAt(gridX, gridY, false);
         }
       }

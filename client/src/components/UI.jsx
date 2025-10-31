@@ -6,8 +6,9 @@ import { Modal, Button ,Input} from "antd"; // Import Ant Design Modal and Butto
 import axios from "axios"
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { contractABI, contractAddress, getAllPosts, pinataApi, pinataSecret, setCoordinates, totalPosts, uploadArt } from "../utils/utils";
+import { pinataApi, pinataSecret } from "../utils/utils";
 import { useWalletInterface } from "../services/wallets/useWalletInterface";
+import { useNFTGallery } from "../hooks/useHederaIp";
 
 // Atoms
 export const buildModeAtom = atom(false);
@@ -34,7 +35,11 @@ export const UI = () => {
   const [img,setImg] = useState(null)
   const [uri,setURI] = useState(null)
   const [artPieces,setArtPieces] = useState([])
+  const [xCoordinate, setXCoordinate] = useState('')
+  const [yCoordinate, setYCoordinate] = useState('')
+  const [rotation, setRotation] = useState(0)
   const { accountId, walletInterface } = useWalletInterface();
+  const { uploadIpNft: contractUploadIpNft, fetchAllPosts, loading: contractLoading } = useNFTGallery();
   // Functions to show and hide modal
   const showModal = () => {
     setIsModalVisible(true);
@@ -88,15 +93,39 @@ export const UI = () => {
       }
       
       console.log("Calling contract to mint/upload art...");
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Upload art - IPFS URI:", ipfsURI);
-      toast.info("Contract interaction not yet implemented");
       
-      // Mock data for now
-      const count = artPieces.length + 1;
-      const vals = generateFramePos(Number(count));
-      console.log(vals)
-      fetchArtPieces()
+      // Prepare coordinates - use manual input or generate automatically
+      let coords;
+      if (xCoordinate && yCoordinate) {
+        coords = {
+          xCoordinate: parseInt(xCoordinate),
+          yCoordinate: parseInt(yCoordinate),
+          rotation: rotation
+        };
+      } else {
+        const count = artPieces.length + 1;
+        const vals = generateFramePos(Number(count));
+        coords = {
+          xCoordinate: vals.x,
+          yCoordinate: vals.y,
+          rotation: vals.rotation
+        };
+      }
+      
+      // Upload ipNft to contract
+      const result = await contractUploadIpNft({
+        uri: ipfsURI,
+        ...coords
+      });
+      
+      if (!result) {
+        toast.error("Failed to upload ipNft to contract");
+        return;
+      }
+      
+      // Refresh art pieces
+      await fetchAllPosts();
+      fetchArtPieces();
 
       const newItem = {
         name: 'frame',
@@ -123,13 +152,13 @@ export const UI = () => {
       socket.emit("itemsUpdate", temp);
   
       // Close the modal
-      toast.success("Successfully added new Art");
+      toast.success("Successfully added new IpNft");
       setIsModalVisible(false);
 
     } catch (error) {
       console.error("Error during the submission process:", error);
       // window.alert("Minting error: " + error.message || "Unknown error occurred");
-      toast.error("Error during the submission process");
+      toast.error("Error during the ipNft submission process");
     } finally {
       setLoading(false);
     }
@@ -215,11 +244,9 @@ export const UI = () => {
     try {
       if(!walletInterface) return;
       
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Fetching art pieces...");
-      // Mock empty array for now
-      setArtPieces([]);
-      console.log("Fetched Art Pieces: []");
+      const posts = await fetchAllPosts();
+      setArtPieces(posts || []);
+      console.log("Fetched Art Pieces:", posts);
     } catch (error) {
       console.error("Error fetching art pieces:", error);
     }
@@ -263,7 +290,7 @@ export const UI = () => {
       {/* Ant Design Modal */}
       <Modal
   title={
-    <span className="text-xl font-semibold text-white">Upload New Art</span>
+    <span className="text-xl font-semibold text-white">Upload New IpNft</span>
   }
   open={isModalVisible}
   onOk={handleSubmit} // Trigger handleSubmit on Ok
@@ -295,7 +322,7 @@ export const UI = () => {
       </label>
       <input
         type="text"
-        placeholder="Enter artwork title"
+        placeholder="Enter ipNft title"
         value={title || ''}
         onChange={(e) => setTitle(e.target.value)}
         className="w-full px-3 py-2.5 bg-black border border-gray-700 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200"
@@ -329,12 +356,67 @@ export const UI = () => {
       </div>
     </div>
 
+    {/* Coordinates Section */}
+    <div className="space-y-4 border-t border-gray-700 pt-4">
+      <h3 className="text-white text-sm font-medium">Position Settings (Optional)</h3>
+      <p className="text-gray-400 text-xs">Leave empty for automatic positioning</p>
+      
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <label className="block text-white text-xs font-medium">
+            X Coordinate
+          </label>
+          <input
+            type="number"
+            placeholder="Auto"
+            value={xCoordinate}
+            onChange={(e) => setXCoordinate(e.target.value)}
+            className="w-full px-3 py-2 bg-black border border-gray-700 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200 text-sm"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="block text-white text-xs font-medium">
+            Y Coordinate
+          </label>
+          <input
+            type="number"
+            placeholder="Auto"
+            value={yCoordinate}
+            onChange={(e) => setYCoordinate(e.target.value)}
+            className="w-full px-3 py-2 bg-black border border-gray-700 text-white placeholder-gray-400 rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all duration-200 text-sm"
+          />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <label className="block text-white text-xs font-medium">
+          Rotation: {rotation * 90}°
+        </label>
+        <input
+          type="range"
+          min="0"
+          max="3"
+          step="1"
+          value={rotation}
+          onChange={(e) => setRotation(parseInt(e.target.value))}
+          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+        />
+        <div className="flex justify-between text-xs text-gray-400">
+          <span>0°</span>
+          <span>90°</span>
+          <span>180°</span>
+          <span>270°</span>
+        </div>
+      </div>
+    </div>
+
     <button
       onClick={handleSubmit}
-      disabled={loading}
+      disabled={loading || contractLoading}
       className="w-full bg-white text-black font-medium py-3 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
     >
-      {loading ? (
+      {(loading || contractLoading) ? (
         <>
           <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -343,7 +425,7 @@ export const UI = () => {
           Uploading...
         </>
       ) : (
-        'Upload Art'
+        'Upload IpNft'
       )}
     </button>
   </div>

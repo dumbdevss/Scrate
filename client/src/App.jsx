@@ -13,8 +13,8 @@ import StoreWalls3 from "./components/walls/Storewalls3";
 import StoreWalls4 from "./components/walls/Storewalls4";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { buyArt, contractABI, contractAddress, getBidders, getMaxBid, likeArt, placeBid, toggleAuction } from "./utils/utils";
 import { useWalletInterface } from "./services/wallets/useWalletInterface";
+import { useNFTGallery } from "./hooks/useHederaIp";
 
 function App() {
   const [shopMode] = useAtom(shopModeAtom);
@@ -43,6 +43,16 @@ function App() {
   const [title, setTitle] = useState(null);
   const [owner, setOwner] = useState("");
   const { accountId, walletInterface } = useWalletInterface();
+  const {
+    buyArt: contractBuyArt,
+    placeBid: contractPlaceBid,
+    likeArt: contractLikeArt,
+    toggleAuction: contractToggleAuction,
+    getBidders: contractGetBidders,
+    getMaxBid: contractGetMaxBid,
+    loading: contractLoading,
+    fetchAllPosts
+  } = useNFTGallery();
 
 
   const handleBuy = async (id, price) => {
@@ -52,9 +62,8 @@ function App() {
         return;
       }
       
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Buy art - ID:", id, "Price:", price);
-      toast.info("Contract interaction not yet implemented");
+      await contractBuyArt(id, price);
+      setIsModalVisible(false);
     } catch (error) {
       console.error("Error buying art:", error);
       toast.error("Error buying art");
@@ -67,9 +76,13 @@ function App() {
         return;
       }
       
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Place bid - ID:", id, "Bid:", bid);
-      toast.info("Contract interaction not yet implemented");
+      if (!bid || parseFloat(bid) <= 0) {
+        toast.error("Please enter a valid bid amount");
+        return;
+      }
+      
+      await contractPlaceBid(id, bid);
+      setBid("");
     } catch (error) {
       console.error("Error placing bid:", error);
       toast.error("Error placing bid");
@@ -82,9 +95,7 @@ function App() {
         return;
       }
       
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Toggle auction - ID:", id);
-      toast.info("Contract interaction not yet implemented");
+      await contractToggleAuction(id);
     } catch (error) {
       console.error("Error toggling auction:", error);
       toast.error("Error toggling auction");
@@ -100,11 +111,9 @@ function App() {
         return;
       }
       
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Get bidders - ID:", id);
-      setBidders([]);
+      const biddersList = await contractGetBidders(id);
+      setBidders(biddersList);
       setIsBiddersModalVisible(true);
-      toast.info("Contract interaction not yet implemented");
     } catch (error) {
       console.error("Error fetching bidders:", error);
       toast.error("Error fetching bidders");
@@ -119,11 +128,9 @@ function App() {
         return;
       }
       
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Get max bid - ID:", id);
-      setMaxBid("0");
+      const maxBidAmount = await contractGetMaxBid(id);
+      setMaxBid(maxBidAmount);
       setIsMaxBidModalVisible(true);
-      toast.info("Contract interaction not yet implemented");
     } catch (error) {
       console.error("Error fetching max bid:", error);
       toast.error("Error fetching max bid");
@@ -136,9 +143,7 @@ function App() {
         return;
       }
       
-      // TODO: Implement contract interaction with wallet interface
-      console.log("Like art - ID:", id);
-      toast.info("Contract interaction not yet implemented");
+      await contractLikeArt(id);
     } catch (error) {
       console.error("Error liking art:", error);
       toast.error("Error liking art");
