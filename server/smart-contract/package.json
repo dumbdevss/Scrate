@@ -5,6 +5,9 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
+    "admin-mint": "hardhat run scripts/admin-mint.ts --network testnet",
+    "mint": "hardhat run scripts/mint.ts --network testnet",
+    "burn": "hardhat run scripts/burn.ts --network testnet",
     "deploy": "hardhat run scripts/deploy.ts --network testnet",
     "deploy-nft": "hardhat run scripts/deploy-nft.ts --network testnet",
     "deploy-local": "hardhat run scripts/deploy-nft.ts --network localhost"

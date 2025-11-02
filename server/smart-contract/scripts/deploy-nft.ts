@@ -18,7 +18,7 @@ async function main() {
   // Deploy HederaIPNft Contract
   console.log("\n📦 Deploying HederaIPNft...");
   const HederaIPNft = await ethers.getContractFactory("HederaIPNft");
-  const hederaIPNft = await HederaIPNft.deploy();
+  const hederaIPNft = await HederaIPNft.deploy(deployer.address);
   await hederaIPNft.waitForDeployment();
   
   const contractAddress = await hederaIPNft.getAddress();

@@ -1,0 +1,14 @@
+{
+  "network": "testnet",
+  "chainId": "296",
+  "deployer": "0xb797Af5E4514129e6aFC8cE0744f7df10C14aC5b",
+  "contract": {
+    "name": "HederaIPNft",
+    "address": "0xD48d7E6Abac7AE2b9f058077F6ceD85A1a9138Bb",
+    "transactionHash": "0x5b6ab5dd84658cf6ba49dc41c0e8e93ac6239e0f36fe4a4c05959e8226f027d4",
+    "collectionName": "Hedera IP NFT",
+    "collectionSymbol": "IPNFT"
+  },
+  "deployedAt": "2025-11-02T07:07:05.807Z",
+  "deploymentBlock": 27010417
+}
