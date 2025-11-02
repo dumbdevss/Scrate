@@ -96,6 +96,7 @@ export const useNFTGallery = () => {
       
       // Upload the ipNft with comprehensive metadata using Hedera contract execution
       const txHash = await executeHederaFunction('uploadArt', parameters);
+      console.log(txHash);
       
       if (!txHash) {
         throw new Error('Transaction failed');

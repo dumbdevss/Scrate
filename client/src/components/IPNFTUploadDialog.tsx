@@ -36,6 +36,8 @@ import {
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { pinataApi, pinataSecret } from '../utils/utils';
+import { IPNFTProgressModal, ProgressStep } from './IPNFTProgressModal';
+import { useNFTGallery } from '../hooks/useHederaIp';
 
 interface IPNFTUploadDialogProps {
   open: boolean;
@@ -93,6 +95,10 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
   const [newTag, setNewTag] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const { uploadIpNft } = useNFTGallery();
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({
@@ -156,6 +162,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
   };
 
   const uploadMetadataToIPFS = async (metadata: any): Promise<string> => {
+    console.log(pinataApi);
     const response = await axios({
       method: 'post',
       url: 'https://api.pinata.cloud/pinning/pinJSONToIPFS',
@@ -170,6 +177,39 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
     return `https://ipfs.io/ipfs/${response.data.IpfsHash}`;
   };
 
+  const initializeProgressSteps = () => {
+    const steps: ProgressStep[] = [
+      {
+        id: 'image-upload',
+        title: 'Upload Image to IPFS',
+        description: 'Storing your image securely on the InterPlanetary File System via Pinata',
+        status: 'pending'
+      },
+      {
+        id: 'metadata-upload',
+        title: 'Upload Metadata to IPFS',
+        description: 'Creating and storing NFT metadata with all your IP information',
+        status: 'pending'
+      },
+      {
+        id: 'hedera-transaction',
+        title: 'Submit to Hedera Network',
+        description: 'Minting your IPNFT on the Hedera blockchain network',
+        status: 'pending'
+      }
+    ];
+    setProgressSteps(steps);
+    return steps;
+  };
+
+  const updateStepStatus = (stepId: string, status: ProgressStep['status'], errorMessage?: string) => {
+    setProgressSteps(prev => prev.map(step => 
+      step.id === stepId 
+        ? { ...step, status, errorMessage }
+        : step
+    ));
+  };
+
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
       toast.error('Title is required');
@@ -182,9 +222,16 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
     }
 
     setUploading(true);
+    const steps = initializeProgressSteps();
+    setShowProgressModal(true);
+    setCurrentStep(0);
+    
     try {
       // Upload image to IPFS
+      updateStepStatus('image-upload', 'processing');
       const imageUrl = await uploadToIPFS(formData.imageFile);
+      updateStepStatus('image-upload', 'completed');
+      setCurrentStep(1);
       
       // Create metadata object
       const metadata = {
@@ -215,7 +262,10 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
       };
 
       // Upload metadata to IPFS
+      updateStepStatus('metadata-upload', 'processing');
       const metadataUri = await uploadMetadataToIPFS(metadata);
+      updateStepStatus('metadata-upload', 'completed');
+      setCurrentStep(2);
 
       // Prepare IPNFT data
       const ipnftData: IPNFTData = {
@@ -234,10 +284,25 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
         rotation: parseInt(formData.rotation)
       };
 
-      await onUpload(ipnftData);
-      handleClose();
+      // Submit to Hedera
+      updateStepStatus('hedera-transaction', 'processing');
+      await uploadIpNft(ipnftData);
+      updateStepStatus('hedera-transaction', 'completed');
+      
+      // Auto-close progress modal after 2 seconds on success
+      setTimeout(() => {
+        setShowProgressModal(false);
+        handleClose();
+      }, 2000);
     } catch (error) {
       console.error('Error uploading IPNFT:', error);
+      
+      // Update the current step with error status
+      const currentStepId = steps[currentStep]?.id;
+      if (currentStepId) {
+        updateStepStatus(currentStepId, 'error', error instanceof Error ? error.message : 'An unexpected error occurred');
+      }
+      
       toast.error('Failed to upload IPNFT');
     } finally {
       setUploading(false);
@@ -259,7 +324,23 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
     setNewTag('');
     setImagePreview(null);
     setUploading(false);
+    setShowProgressModal(false);
+    setProgressSteps([]);
+    setCurrentStep(0);
     onClose();
+  };
+
+  const handleProgressModalClose = () => {
+    setShowProgressModal(false);
+  };
+
+  const handleRetry = () => {
+    setShowProgressModal(false);
+    // Reset progress state
+    setProgressSteps([]);
+    setCurrentStep(0);
+    // Retry the submission
+    handleSubmit();
   };
 
   return (
@@ -515,6 +596,16 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
           </Typography>
         </Alert>
       </DialogContent>
+
+      {/* Progress Modal */}
+      <IPNFTProgressModal
+        open={showProgressModal}
+        onClose={handleProgressModalClose}
+        steps={progressSteps}
+        currentStep={currentStep}
+        onRetry={handleRetry}
+        canClose={progressSteps.some(step => step.status === 'error') || progressSteps.every(step => step.status === 'completed')}
+      />
 
       <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
         <Button onClick={handleClose} disabled={uploading || loading}>
