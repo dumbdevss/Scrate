@@ -1,8 +1,5 @@
-import NftGallery from '../abi/NFTGallery.json';
-
-
-export const contractAddress = "0xa779B2594Fb4fEFaf8Ac7c9c74d386a023D3354b";
-export const contractABI = NftGallery.abi;
+// Get values from environment variables
+export const contractAddress = import.meta.env.REACT_APP_CONTRACT_ADDRESS || "0xa779B2594Fb4fEFaf8Ac7c9c74d386a023D3354b";
 
 // function Names
 
@@ -19,5 +16,5 @@ export const likeArt = 'likeArt';
 
 // keys
 
-export const pinataApi = '8cef275b509a3c2ca29a';
-export const pinataSecret = '48bf7eff59b2fb1c0883c3936cfe2fd08a35037ffba762c31962cc0c61e0bd36'
+export const pinataApi = import.meta.env.REACT_APP_PINATA_API_KEY;
+export const pinataSecret = import.meta.env.REACT_APP_PINATA_API_SECRET;

@@ -1,7 +1,7 @@
 import pathfinding from "pathfinding";
 import { Server } from "socket.io";
 // import socketIO from "socket.io";
-import { ContractCallQuery, AccountId, PrivateKey, Client } from "@hashgraph/sdk";
+import { ContractCallQuery, AccountId, PrivateKey, Client, ContractId, Hbar } from "@hashgraph/sdk";
 import { ethers } from "ethers";
 import { JsonRpcProvider } from "ethers";
 import abi from "../client/src/abi/NFTGallery.json" with { type: "json" };
@@ -46,18 +46,40 @@ const client = Client.forTestnet();
 //Set the operator with the account ID and private key
 client.setOperator(MY_ACCOUNT_ID, MY_PRIVATE_KEY);
 
-//Contract call query
-const contractCallQuery = new ContractCallQuery()
-  .setContractId('0.0.7173071') //Fill in the contract ID
-  .setGas(300000)
-  .setFunction("getAllPosts"); //Fill in the function name
+// Function to call Hedera contract getter functions
+const callHederaContractFunction = async (functionName, parameters = null) => {
+  try {
+    const contractId = ContractId.fromString('0.0.7180340');
 
-//Sign with the client operator private key to pay for the query and submit the query to a Hedera network
-const contractCallResult = await contractCallQuery.execute(client);
+    // Create the query
+    const query = new ContractCallQuery()
+      .setContractId(contractId)
+      // Set the gas limit for the call (getter functions use less gas than state-changing functions)
+      .setGas(100000) 
+      // Set the function name and parameters
+      .setFunction(functionName, parameters)
+      // Set the query payment (optional, but a good practice if default payment is too low)
+      .setQueryPayment(new Hbar(4)); 
 
-const messageContractCall = contractCallResult.getString(0);
+    // Execute the query on the network
+    const contractFunctionResult = await query.execute(client);
 
-console.log(messageContractCall);
+    // For getAllActivePosts, we expect an array result
+    // The exact extraction method depends on the contract's return type
+    return contractFunctionResult;
+  } catch (error) {
+    console.error(`Error calling Hedera contract function ${functionName}:`, error);
+    throw error;
+  }
+};
+
+// Test the contract call
+try {
+  const result = await callHederaContractFunction("getAllActivePosts");
+  console.log("Hedera contract call successful:", result);
+} catch (error) {
+  console.error("Hedera contract call failed:", error);
+}
 
 const privateKey =
   "440e0d85a55d3f9bb901900c62bc33f77570c32b640b3e881e3422c34a199ca7";
@@ -713,8 +735,36 @@ const map = {
   ],
 };
 const fetchAllPosts = async () => {
-  const posts = await contract.getAllPosts();
-  console.log("Fetched posts:", posts.length);
+  console.log("Fetching posts from both networks...");
+  
+  // Fetch from Camp network
+  let campPosts = [];
+  try {
+    campPosts = await contract.getAllPosts();
+    console.log("Fetched Camp network posts:", campPosts.length);
+  } catch (error) {
+    console.error("Error fetching Camp network posts:", error);
+  }
+
+  // Fetch from Hedera network
+  let hederaPosts = [];
+  try {
+    // Create Hedera contract instance for reading
+    const hederaProvider = new JsonRpcProvider("https://testnet.hashio.io/api");
+    const hederaContract = new ethers.Contract(
+      "0xD48d7E6Abac7AE2b9f058077F6ceD85A1a9138Bb", // Ethereum-style address for ethers.js
+      abi.abi, 
+      hederaProvider
+    );
+    hederaPosts = await hederaContract.getAllActivePosts();
+    console.log("Fetched Hedera network posts:", hederaPosts.length);
+  } catch (error) {
+    console.error("Error fetching Hedera network posts:", error);
+  }
+
+  // Combine posts from both networks
+  const allPosts = [...campPosts, ...hederaPosts];
+  console.log("Total posts from both networks:", allPosts.length);
   // posts.map(async (post, i) => {
   //   const imgResponse = await fetch(post[1]);
   //   const imgData = await imgResponse.json();
@@ -736,7 +786,7 @@ const fetchAllPosts = async () => {
   //   // console.log(obj);
   //   map.items.push(obj);
   // });
-  for (const post of posts) {
+  for (const post of allPosts) {
     const postID = Number(post[0]);
     const itemIndex = map.items.findIndex(item => item.name === "frame" && item.id === postID);
     if (itemIndex !== -1) {
@@ -754,23 +804,77 @@ const fetchAllPosts = async () => {
       };
       continue;
     }
-    const imgResponse = await fetch(post[1]);
-    const imgData = await imgResponse.json();
-    const obj = {
-      ...items.frame,
-      gridPosition: [Number(post[8]), Number(post[9])],
-      by: post[2],
-      likes: Number(post[7]),
-      rotation: Number(post[10]),
-      link: imgData.img || '',
-      title: imgData.title,
-      price: imgData.price,
-      auctionActive: post[5],
-      sold: post[6],
-      maxBidder: post[4],
-      currentBid: Number(post[3]),
-      id: Number(post[0]),
-    };
+    let imgData = {};
+    let obj = {};
+    
+    try {
+      // Check if this is a Hedera post with enhanced metadata
+      if (post.length > 11 && post[11]) { // Has title field (Hedera post)
+        obj = {
+          ...items.frame,
+          gridPosition: [Number(post[8]), Number(post[9])],
+          by: post[2],
+          likes: Number(post[7]),
+          rotation: Number(post[10]),
+          link: post[34] || '', // imageUrl field
+          title: post[11] || 'Untitled', // title field
+          description: post[12] || '', // description field
+          ipType: post[13] || 'Digital Art', // ipType field
+          creator: post[14] || post[2], // creator field
+          tags: post[16] || [], // tags field
+          contentHash: post[17] || '', // contentHash field
+          externalUrl: post[33] || '', // externalUrl field
+          price: 0, // Hedera posts don't have price in same format
+          auctionActive: post[5],
+          sold: post[6],
+          maxBidder: post[4],
+          currentBid: Number(post[3]),
+          id: Number(post[0]),
+          network: 'hedera'
+        };
+      } else {
+        // Legacy Camp network post
+        const imgResponse = await fetch(post[1]);
+        imgData = await imgResponse.json();
+        obj = {
+          ...items.frame,
+          gridPosition: [Number(post[8]), Number(post[9])],
+          by: post[2],
+          likes: Number(post[7]),
+          rotation: Number(post[10]),
+          link: imgData.img || '',
+          title: imgData.title || 'Untitled',
+          description: imgData.description || '',
+          price: imgData.price || 0,
+          auctionActive: post[5],
+          sold: post[6],
+          maxBidder: post[4],
+          currentBid: Number(post[3]),
+          id: Number(post[0]),
+          network: 'camp'
+        };
+      }
+    } catch (error) {
+      console.error("Error processing post:", error);
+      // Fallback object
+      obj = {
+        ...items.frame,
+        gridPosition: [Number(post[8]) || 0, Number(post[9]) || 0],
+        by: post[2] || 'Unknown',
+        likes: Number(post[7]) || 0,
+        rotation: Number(post[10]) || 0,
+        link: '',
+        title: 'Error Loading Post',
+        description: '',
+        price: 0,
+        auctionActive: false,
+        sold: false,
+        maxBidder: post[4] || '',
+        currentBid: Number(post[3]) || 0,
+        id: Number(post[0]) || 0,
+        network: 'unknown'
+      };
+    }
     // console.log(obj);
     map.items.push(obj);
   }

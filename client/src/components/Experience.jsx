@@ -15,7 +15,6 @@ import {
 } from "./UI";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { contractABI, contractAddress, setCoordinates } from "../utils/utils";
 import { useWalletInterface } from "../services/wallets/useWalletInterface";
 export const Experience = ({ onFrameClick}) => {
   const [buildMode, setBuildMode] = useAtom(buildModeAtom);
