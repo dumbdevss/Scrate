@@ -43,7 +43,7 @@ const contractAddress = "0xa779B2594Fb4fEFaf8Ac7c9c74d386a023D3354b";
 
 // Hedera network configuration
 const hederaProvider = new JsonRpcProvider("https://testnet.hashio.io/api");
-const hederaContractAddress = "0xD48d7E6Abac7AE2b9f058077F6ceD85A1a9138Bb"; // Ethereum-style address for the Hedera contract
+const hederaContractAddress = "0x9bbd169f8ad5526f1db697fa8c4b244becd6fade"; // Ethereum-style address for the Hedera contract
 
 // console.log(abi.abi)
 const signer = new ethers.Wallet(privateKey, alchemyProvider);
@@ -71,13 +71,23 @@ async function getHederaActivePosts() {
     console.log("Fetching active posts from Hedera contract...");
     const activePosts = await hederaContract.getAllActivePosts();
     
-    console.log(`Found ${activePosts.length} active posts on Hedera`);
+    // Debug: Log the first post structure to see what we're getting from contract
+    if (activePosts.length > 0) {
+      console.log('Sample Hedera post structure:', {
+        id: activePosts[0].id,
+        price: activePosts[0].price,
+        projectDetails: activePosts[0].projectDetails,
+        title: activePosts[0].title,
+        industry: activePosts[0].projectDetails?.industry
+      });
+    }
     
     // Convert the result to a more readable format
     const formattedPosts = activePosts.map((post, index) => ({
       id: Number(post.id),
       uri: post.uri,
       owner: post.owner,
+      price: ethers.formatEther(post.price), // Add missing price field
       maxBid: ethers.formatEther(post.maxBid),
       maxBidder: post.maxBidder,
       auctionActive: post.auctionActive,
@@ -97,6 +107,13 @@ async function getHederaActivePosts() {
       schemaVersion: post.schemaVersion,
       externalUrl: post.externalUrl,
       imageUrl: post.imageUrl,
+      agreementPdfUrl: post.agreementPdfUrl, // Add missing agreement PDF field
+      // Extract project details from nested struct
+      industry: post.projectDetails?.industry || '',
+      organization: post.projectDetails?.organization || '',
+      topic: post.projectDetails?.topic || '',
+      researchLeadName: post.projectDetails?.researchLeadName || '',
+      researchLeadEmail: post.projectDetails?.researchLeadEmail || '',
       burned: post.burned
     }));
     
@@ -751,13 +768,11 @@ const map = {
   ],
 };
 const fetchAllPosts = async () => {
-  console.log("Fetching posts from both networks...");
   
   // Fetch from Camp network
   let campPosts = [];
   try {
     campPosts = await contract.getAllPosts();
-    console.log("Fetched Camp network posts:", campPosts.length);
   } catch (error) {
     console.error("Error fetching Camp network posts:", error);
   }
@@ -766,14 +781,12 @@ const fetchAllPosts = async () => {
   let hederaPosts = [];
   try {
     hederaPosts = await getHederaActivePosts();
-    console.log("Fetched Hedera network posts:", hederaPosts.length);
   } catch (error) {
     console.error("Error fetching Hedera network posts:", error);
   }
 
   // Combine posts from both networks
-  const allPosts = [...campPosts, ...hederaPosts];
-  console.log("Total posts from both networks:", allPosts.length);
+  const allPosts = [...hederaPosts];
   // posts.map(async (post, i) => {
   //   const imgResponse = await fetch(post[1]);
   //   const imgData = await imgResponse.json();
@@ -842,28 +855,56 @@ const fetchAllPosts = async () => {
     
     try {
       if (isHederaPost) {
-        // Hedera post (already formatted object)
+        // Hedera post - fetch metadata from URI like Camp posts
+        let metadata = {};
+        if (post.uri) {
+          try {
+            const metadataResponse = await fetch(post.uri);
+            metadata = await metadataResponse.json();
+          } catch (metadataError) {
+            console.error("Error fetching Hedera post metadata:", metadataError);
+          }
+        }
+        
         obj = {
           ...items.frame,
           gridPosition: [post.xCoordinate, post.yCoordinate],
-          by: post.owner,
+          by: post.owner || 'Unknown',
+          owner: post.owner || 'Unknown',
           likes: post.likes,
           rotation: post.rotation,
-          link: post.imageUrl || '',
-          title: post.title || 'Untitled',
-          description: post.description || '',
+          link: metadata.image || post.imageUrl || `https://gateway.pinata.cloud/ipfs/${post.contentHash}`,
+          title: metadata.name || post.title || 'Untitled',
+          description: metadata.description || post.description || '',
           ipType: post.ipType || 'Digital Art',
-          creator: post.creator || post.owner,
+          creator: post.creator || post.owner || 'Unknown',
           tags: post.tags || [],
           contentHash: post.contentHash || '',
           externalUrl: post.externalUrl || '',
-          price: 0, // Hedera posts don't have price in same format
+          price: metadata.price || post.price || 0,
+          // Complete IPNFT fields from both metadata and contract
+          industry: metadata.industry || post.industry || '',
+          imageUrl: metadata.image || post.imageUrl || `https://gateway.pinata.cloud/ipfs/${post.contentHash}`,
+          organization: metadata.organization || post.organization || '',
+          researchLeadName: metadata.researchLeadName || post.researchLeadName || '',
+          researchLeadEmail: metadata.researchLeadEmail || post.researchLeadEmail || '',
+          projectDetails: metadata.projectDetails || post.projectDetails || {},
+          topic: metadata.topic || post.topic || '',
+          agreementPdfUrl: metadata.agreementPdfUrl || post.agreementPdfUrl || '',
+          // Blockchain specific fields
           auctionActive: post.auctionActive,
           sold: post.sold,
           maxBidder: post.maxBidder,
           currentBid: parseFloat(post.maxBid),
+          maxBid: post.maxBid,
           id: post.id,
-          network: 'hedera'
+          network: 'hedera',
+          // Additional metadata fields
+          createdAt: post.createdAt,
+          isActive: post.isActive,
+          schemaVersion: post.schemaVersion || '1.0',
+          burned: post.burned || false,
+          uri: post.uri
         };
       } else {
         // Camp network post (array format)
@@ -873,6 +914,7 @@ const fetchAllPosts = async () => {
           ...items.frame,
           gridPosition: [Number(post[8]), Number(post[9])],
           by: post[2],
+          owner: post[2], // Add owner field for consistency
           likes: Number(post[7]),
           rotation: Number(post[10]),
           link: imgData.img || '',
@@ -883,17 +925,37 @@ const fetchAllPosts = async () => {
           sold: post[6],
           maxBidder: post[4],
           currentBid: Number(post[3]),
+          maxBid: post[3], // Add maxBid for consistency
           id: Number(post[0]),
-          network: 'camp'
+          network: 'camp',
+          // Add default values for IPNFT-specific fields to maintain consistency
+          ipType: imgData.ipType || 'Digital Art',
+          creator: post[2],
+          tags: imgData.tags || [],
+          contentHash: imgData.contentHash || '',
+          externalUrl: imgData.externalUrl || '',
+          industry: imgData.industry || '',
+          organization: imgData.organization || '',
+          researchLeadName: imgData.researchLeadName || '',
+          researchLeadEmail: imgData.researchLeadEmail || '',
+          projectDetails: imgData.projectDetails || {},
+          topic: imgData.topic || '',
+          agreementPdfUrl: imgData.agreementPdfUrl || '',
+          createdAt: imgData.createdAt || Date.now(),
+          isActive: imgData.isActive !== undefined ? imgData.isActive : true,
+          schemaVersion: imgData.schemaVersion || '1.0',
+          burned: false,
+          uri: post[1]
         };
       }
     } catch (error) {
       console.error("Error processing post:", error);
-      // Fallback object
+      // Fallback object with all required fields
       obj = {
         ...items.frame,
         gridPosition: isHederaPost ? [post.xCoordinate || 0, post.yCoordinate || 0] : [Number(post[8]) || 0, Number(post[9]) || 0],
         by: isHederaPost ? (post.owner || 'Unknown') : (post[2] || 'Unknown'),
+        owner: isHederaPost ? (post.owner || 'Unknown') : (post[2] || 'Unknown'),
         likes: isHederaPost ? (post.likes || 0) : (Number(post[7]) || 0),
         rotation: isHederaPost ? (post.rotation || 0) : (Number(post[10]) || 0),
         link: '',
@@ -904,15 +966,53 @@ const fetchAllPosts = async () => {
         sold: false,
         maxBidder: isHederaPost ? (post.maxBidder || '') : (post[4] || ''),
         currentBid: isHederaPost ? (parseFloat(post.maxBid) || 0) : (Number(post[3]) || 0),
+        maxBid: isHederaPost ? (post.maxBid || '0') : (post[3] || '0'),
         id: isHederaPost ? (post.id || 0) : (Number(post[0]) || 0),
-        network: isHederaPost ? 'hedera' : 'camp'
+        network: isHederaPost ? 'hedera' : 'camp',
+        // Complete IPNFT fields with fallback values
+        ipType: 'Digital Art',
+        creator: isHederaPost ? (post.creator || post.owner || 'Unknown') : (post[2] || 'Unknown'),
+        tags: [],
+        contentHash: isHederaPost ? (post.contentHash || '') : '',
+        externalUrl: '',
+        industry: '',
+        imageUrl: '',
+        organization: '',
+        researchLeadName: '',
+        researchLeadEmail: '',
+        projectDetails: {},
+        topic: '',
+        agreementPdfUrl: '',
+        createdAt: isHederaPost ? (post.createdAt || Date.now()) : Date.now(),
+        isActive: true,
+        schemaVersion: '1.0',
+        burned: false,
+        uri: isHederaPost ? (post.uri || '') : (post[1] || '')
       };
     }
-    // console.log(obj);
+    
+    // Debug: Log the final object structure to verify all fields are captured
+    if (obj.network === 'hedera') {
+      console.log('Final Hedera IPNFT object:', {
+        id: obj.id,
+        title: obj.title,
+        price: obj.price,
+        industry: obj.industry,
+        organization: obj.organization,
+        researchLeadName: obj.researchLeadName,
+        researchLeadEmail: obj.researchLeadEmail,
+        topic: obj.topic,
+        agreementPdfUrl: obj.agreementPdfUrl,
+        createdAt: obj.createdAt,
+        isActive: obj.isActive,
+        schemaVersion: obj.schemaVersion,
+        burned: obj.burned,
+        uri: obj.uri
+      });
+    }
+    
     map.items.push(obj);
   }
-  console.log("fetchAllPosts completed");
-  console.log("Map items:", map.items.length);
 };
 // await fetchAllPosts()
 

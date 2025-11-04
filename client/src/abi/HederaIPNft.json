@@ -488,6 +488,11 @@
         },
         {
           "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
           "name": "maxBid",
           "type": "uint256"
         },
@@ -580,6 +585,43 @@
           "internalType": "string",
           "name": "imageUrl",
           "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "agreementPdfUrl",
+          "type": "string"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "industry",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "organization",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "topic",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "researchLeadName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "researchLeadEmail",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct HederaIPNft.ProjectDetails",
+          "name": "projectDetails",
+          "type": "tuple"
         },
         {
           "internalType": "bool",
@@ -695,6 +737,11 @@
             },
             {
               "internalType": "uint256",
+              "name": "price",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
               "name": "maxBid",
               "type": "uint256"
             },
@@ -792,6 +839,43 @@
               "internalType": "string",
               "name": "imageUrl",
               "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "agreementPdfUrl",
+              "type": "string"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "industry",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "organization",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "topic",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "researchLeadName",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "researchLeadEmail",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct HederaIPNft.ProjectDetails",
+              "name": "projectDetails",
+              "type": "tuple"
             },
             {
               "internalType": "bool",
@@ -830,6 +914,11 @@
             },
             {
               "internalType": "uint256",
+              "name": "price",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
               "name": "maxBid",
               "type": "uint256"
             },
@@ -927,6 +1016,43 @@
               "internalType": "string",
               "name": "imageUrl",
               "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "agreementPdfUrl",
+              "type": "string"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "industry",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "organization",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "topic",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "researchLeadName",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "researchLeadEmail",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct HederaIPNft.ProjectDetails",
+              "name": "projectDetails",
+              "type": "tuple"
             },
             {
               "internalType": "bool",
@@ -1044,6 +1170,16 @@
           "internalType": "string",
           "name": "imageUrl",
           "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "agreementPdfUrl",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -1088,6 +1224,11 @@
               "internalType": "address payable",
               "name": "owner",
               "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "price",
+              "type": "uint256"
             },
             {
               "internalType": "uint256",
@@ -1190,6 +1331,43 @@
               "type": "string"
             },
             {
+              "internalType": "string",
+              "name": "agreementPdfUrl",
+              "type": "string"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "industry",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "organization",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "topic",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "researchLeadName",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "researchLeadEmail",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct HederaIPNft.ProjectDetails",
+              "name": "projectDetails",
+              "type": "tuple"
+            },
+            {
               "internalType": "bool",
               "name": "burned",
               "type": "bool"
@@ -1198,6 +1376,64 @@
           "internalType": "struct HederaIPNft.ArtPiece[]",
           "name": "",
           "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        }
+      ],
+      "name": "getPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getProjectDetails",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "industry",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "organization",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "topic",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "researchLeadName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "researchLeadEmail",
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -1453,6 +1689,24 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "_id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        }
+      ],
+      "name": "setPrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes4",
           "name": "interfaceId",
           "type": "bytes4"
@@ -1604,6 +1858,11 @@
           "type": "string"
         },
         {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        },
+        {
           "internalType": "string",
           "name": "_title",
           "type": "string"
@@ -1646,6 +1905,36 @@
         {
           "internalType": "string",
           "name": "_imageUrl",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_agreementPdfUrl",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_industry",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_organization",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_topic",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_researchLeadName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_researchLeadEmail",
           "type": "string"
         }
       ],

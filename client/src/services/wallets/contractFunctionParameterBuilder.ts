@@ -25,9 +25,27 @@ export class ContractFunctionParameterBuilder {
   }
 
   // Purpose: Build the ethers compatible contract function call params
-  // Reason: An array of strings is required to call a contract function using ethers
-  public buildEthersParams(): string[] {
-    return this.params.map(param => param.value.toString());
+  // Reason: An array of values is required to call a contract function using ethers
+  public buildEthersParams(): any[] {
+    return this.params.map(param => {
+      // Handle array types - don't convert arrays to strings
+      if (param.type.includes('[]') && Array.isArray(param.value)) {
+        return param.value;
+      }
+      // Handle bytes type - convert string to bytes if needed
+      if (param.type === 'bytes') {
+        if (param.value instanceof Uint8Array) {
+          return param.value;
+        }
+        // Convert string to bytes using TextEncoder (browser-compatible)
+        if (typeof param.value === 'string') {
+          return new TextEncoder().encode(param.value);
+        }
+        return param.value;
+      }
+      // Convert other types to string
+      return param.value.toString();
+    });
   }
 
   // Purpose: Build the HAPI compatible contract function params

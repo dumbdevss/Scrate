@@ -31,7 +31,8 @@ import {
   Description as DescriptionIcon,
   Tag as TagIcon,
   Link as LinkIcon,
-  AccountBalance as HbarIcon
+  AccountBalance as HbarIcon,
+  Business as BusinessIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -48,6 +49,7 @@ interface IPNFTUploadDialogProps {
 
 export interface IPNFTData {
   uri: string;
+  price: string;
   title: string;
   description: string;
   ipType: string;
@@ -57,6 +59,14 @@ export interface IPNFTData {
   schemaVersion: string;
   externalUrl: string;
   imageUrl: string;
+  agreementPdfUrl: string;
+  projectDetails: {
+    industry: string;
+    organization: string;
+    topic: string;
+    researchLeadName: string;
+    researchLeadEmail: string;
+  };
   xCoordinate?: number;
   yCoordinate?: number;
   rotation?: number;
@@ -90,7 +100,15 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
     imageFile: null as File | null,
     xCoordinate: '',
     yCoordinate: '',
-    rotation: '0'
+    rotation: '0',
+    price: '',
+    agreementPdfUrl: '',
+    // Project details
+    industry: 'Pharmaceutical R&D',
+    organization: 'Newcastle University, UK',
+    topic: 'Aging',
+    researchLeadName: 'Chuck Norris',
+    researchLeadEmail: 'chuck@norris.com'
   });
   const [newTag, setNewTag] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -270,6 +288,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
       // Prepare IPNFT data
       const ipnftData: IPNFTData = {
         uri: metadataUri,
+        price: formData.price,
         title: formData.title,
         description: formData.description,
         ipType: formData.ipType,
@@ -279,11 +298,20 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
         schemaVersion: '1.0',
         externalUrl: formData.externalUrl,
         imageUrl: imageUrl,
+        agreementPdfUrl: formData.agreementPdfUrl,
+        projectDetails: {
+          industry: formData.industry,
+          organization: formData.organization,
+          topic: formData.topic,
+          researchLeadName: formData.researchLeadName,
+          researchLeadEmail: formData.researchLeadEmail
+        },
         xCoordinate: formData.xCoordinate ? parseInt(formData.xCoordinate) : undefined,
         yCoordinate: formData.yCoordinate ? parseInt(formData.yCoordinate) : undefined,
         rotation: parseInt(formData.rotation)
       };
 
+      console.log(ipnftData);
       // Submit to Hedera
       updateStepStatus('hedera-transaction', 'processing');
       await uploadIpNft(ipnftData);
@@ -319,7 +347,15 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
       imageFile: null,
       xCoordinate: '',
       yCoordinate: '',
-      rotation: '0'
+      rotation: '0',
+      price: '',
+      agreementPdfUrl: '',
+      // Project details
+      industry: 'Pharmaceutical R&D',
+      organization: 'Newcastle University, UK',
+      topic: 'Aging',
+      researchLeadName: 'Chuck Norris',
+      researchLeadEmail: 'chuck@norris.com'
     });
     setNewTag('');
     setImagePreview(null);
@@ -525,6 +561,90 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
 
               <Divider />
 
+              {/* Pricing Information */}
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <HbarIcon color="primary" />
+                  Pricing
+                </Typography>
+                
+                <TextField
+                  label="Price (HBAR)"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  fullWidth
+                  type="number"
+                  placeholder="0"
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">ℏ</InputAdornment>,
+                  }}
+                  helperText="Set to 0 for free transfer, or specify price in HBAR"
+                />
+              </Box>
+
+              <Divider />
+
+              {/* Project Details */}
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <BusinessIcon color="primary" />
+                  Project Details
+                </Typography>
+                
+                <Stack spacing={2}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label="Industry"
+                        value={formData.industry}
+                        onChange={(e) => handleInputChange('industry', e.target.value)}
+                        fullWidth
+                        placeholder="e.g., Pharmaceutical R&D"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label="Organization"
+                        value={formData.organization}
+                        onChange={(e) => handleInputChange('organization', e.target.value)}
+                        fullWidth
+                        placeholder="e.g., Newcastle University, UK"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label="Research Topic"
+                        value={formData.topic}
+                        onChange={(e) => handleInputChange('topic', e.target.value)}
+                        fullWidth
+                        placeholder="e.g., Aging"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label="Research Lead Name"
+                        value={formData.researchLeadName}
+                        onChange={(e) => handleInputChange('researchLeadName', e.target.value)}
+                        fullWidth
+                        placeholder="e.g., Chuck Norris"
+                      />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        label="Research Lead Email"
+                        value={formData.researchLeadEmail}
+                        onChange={(e) => handleInputChange('researchLeadEmail', e.target.value)}
+                        fullWidth
+                        type="email"
+                        placeholder="e.g., chuck@norris.com"
+                      />
+                    </Grid>
+                  </Grid>
+                </Stack>
+              </Box>
+
+              <Divider />
+
               {/* Additional Information */}
               <Box>
                 <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -532,13 +652,24 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                   Additional Information
                 </Typography>
                 
-                <TextField
-                  label="External URL (Optional)"
-                  value={formData.externalUrl}
-                  onChange={(e) => handleInputChange('externalUrl', e.target.value)}
-                  fullWidth
-                  placeholder="https://example.com"
-                />
+                <Stack spacing={2}>
+                  <TextField
+                    label="External URL (Optional)"
+                    value={formData.externalUrl}
+                    onChange={(e) => handleInputChange('externalUrl', e.target.value)}
+                    fullWidth
+                    placeholder="https://example.com"
+                  />
+                  
+                  <TextField
+                    label="Agreement PDF URL (Optional)"
+                    value={formData.agreementPdfUrl}
+                    onChange={(e) => handleInputChange('agreementPdfUrl', e.target.value)}
+                    fullWidth
+                    placeholder="https://ipfs.io/ipfs/... or https://example.com/agreement.pdf"
+                    helperText="IPFS link or URL to legal agreement document"
+                  />
+                </Stack>
               </Box>
 
               <Divider />

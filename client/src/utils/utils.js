@@ -18,3 +18,4 @@ export const likeArt = 'likeArt';
 
 export const pinataApi = import.meta.env.VITE_REACT_APP_PINATA_API_KEY;
 export const pinataSecret = import.meta.env.VITE_REACT_APP_PINATA_API_SECRET;
+export const hederaContractId = import.meta.env.VITE_REACT_APP_HEDERA_CONTRACT_ID;

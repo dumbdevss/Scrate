@@ -6,10 +6,19 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
+    struct ProjectDetails {
+        string industry;
+        string organization;
+        string topic;
+        string researchLeadName;
+        string researchLeadEmail;
+    }
+
     struct ArtPiece {
         uint256 id;
         string uri;
         address payable owner;
+        uint256 price;           // Fixed price for direct purchase
         uint256 maxBid;
         address payable maxBidder;
         bool auctionActive;
@@ -31,6 +40,8 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
         string schemaVersion;
         string externalUrl;
         string imageUrl;
+        string agreementPdfUrl;  // IPFS link for agreement PDF
+        ProjectDetails projectDetails;
         bool burned;
     }
 
@@ -54,6 +65,7 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
 
     function uploadArt(
         string memory _uri,
+        uint256 _price,
         string memory _title,
         string memory _description,
         string memory _ipType,
@@ -62,7 +74,13 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
         bytes memory _metadataBytes,
         string memory _schemaVersion,
         string memory _externalUrl,
-        string memory _imageUrl
+        string memory _imageUrl,
+        string memory _agreementPdfUrl,
+        string memory _industry,
+        string memory _organization,
+        string memory _topic,
+        string memory _researchLeadName,
+        string memory _researchLeadEmail
     ) public {
         totalPosts++;
         uint256 newId = totalPosts;
@@ -70,6 +88,7 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
             id: newId,
             uri: _uri,
             owner: payable(msg.sender),
+            price: _price,
             maxBid: 0,
             maxBidder: payable(address(0)),
             auctionActive: false,
@@ -90,6 +109,14 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
             schemaVersion: _schemaVersion,
             externalUrl: _externalUrl,
             imageUrl: _imageUrl,
+            agreementPdfUrl: _agreementPdfUrl,
+            projectDetails: ProjectDetails({
+                industry: _industry,
+                organization: _organization,
+                topic: _topic,
+                researchLeadName: _researchLeadName,
+                researchLeadEmail: _researchLeadEmail
+            }),
             burned: false
         }));
         _safeMint(msg.sender, newId);
@@ -142,12 +169,23 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
         require(!artPieces[_id - 1].burned, "Cannot buy burned token");
         require(!artPieces[_id - 1].auctionActive, "In auction");
         require(!artPieces[_id - 1].sold, "Already sold");
-        require(msg.value > 0, "Price must be greater than 0");
+        require(artPieces[_id - 1].price > 0, "Item not for sale");
+        require(msg.value >= artPieces[_id - 1].price, "Insufficient payment");
+        
         address payable previousOwner = artPieces[_id - 1].owner;
+        uint256 salePrice = artPieces[_id - 1].price;
+        
         _transfer(previousOwner, msg.sender, _id);
-        previousOwner.transfer(msg.value);
+        previousOwner.transfer(salePrice);
+        
+        // Return excess payment if any
+        if (msg.value > salePrice) {
+            payable(msg.sender).transfer(msg.value - salePrice);
+        }
+        
         artPieces[_id - 1].sold = true;
-        emit ArtSold(_id, msg.sender, msg.value);
+        artPieces[_id - 1].owner = payable(msg.sender);
+        emit ArtSold(_id, msg.sender, salePrice);
     }
 
     function setCoordinates(uint256 _id, uint256 _xCoordinate, uint256 _yCoordinate, uint256 _rotation) public {
@@ -157,6 +195,17 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
         artPieces[_id - 1].yCoordinate = _yCoordinate;
         artPieces[_id - 1].rotation = _rotation;
         emit CoordinatesChanged(_id, _xCoordinate, _yCoordinate, _rotation);
+    }
+
+    function setPrice(uint256 _id, uint256 _price) public {
+        require(ownerOf(_id) == msg.sender, "Not owner");
+        require(!artPieces[_id - 1].burned, "Cannot modify burned token");
+        artPieces[_id - 1].price = _price;
+    }
+
+    function getPrice(uint256 _id) public view returns (uint256) {
+        require(_id > 0 && _id <= artPieces.length, "Invalid token ID");
+        return artPieces[_id - 1].price;
     }
 
     function getAllPosts() public view returns (ArtPiece[] memory) {
@@ -211,7 +260,9 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
         bool isActive,
         string memory schemaVersion,
         string memory externalUrl,
-        string memory imageUrl
+        string memory imageUrl,
+        string memory agreementPdfUrl,
+        uint256 price
     ) {
         require(tokenId > 0 && tokenId <= artPieces.length, "Invalid token ID");
         ArtPiece memory piece = artPieces[tokenId - 1];
@@ -227,7 +278,28 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
             piece.isActive,
             piece.schemaVersion,
             piece.externalUrl,
-            piece.imageUrl
+            piece.imageUrl,
+            piece.agreementPdfUrl,
+            piece.price
+        );
+    }
+
+    function getProjectDetails(uint256 tokenId) public view returns (
+        string memory industry,
+        string memory organization,
+        string memory topic,
+        string memory researchLeadName,
+        string memory researchLeadEmail
+    ) {
+        require(tokenId > 0 && tokenId <= artPieces.length, "Invalid token ID");
+        ProjectDetails memory details = artPieces[tokenId - 1].projectDetails;
+        
+        return (
+            details.industry,
+            details.organization,
+            details.topic,
+            details.researchLeadName,
+            details.researchLeadEmail
         );
     }
     
@@ -272,6 +344,7 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
             id: newId,
             uri: "",
             owner: payable(to),
+            price: 0,
             maxBid: 0,
             maxBidder: payable(address(0)),
             auctionActive: false,
@@ -292,6 +365,14 @@ contract HederaIPNft is ERC721, ERC721Burnable, Ownable {
             schemaVersion: "1.0",
             externalUrl: "",
             imageUrl: "",
+            agreementPdfUrl: "",
+            projectDetails: ProjectDetails({
+                industry: "",
+                organization: "",
+                topic: "",
+                researchLeadName: "",
+                researchLeadEmail: ""
+            }),
             burned: false
         }));
         

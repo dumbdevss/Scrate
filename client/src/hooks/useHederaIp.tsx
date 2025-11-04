@@ -2,15 +2,25 @@ import { useState, useCallback } from 'react';
 import { ContractId } from '@hashgraph/sdk';
 import { useWalletInterface } from '../services/wallets/useWalletInterface';
 import { toast } from 'react-toastify';
+import { hederaContractId } from '../utils/utils';
 import { ContractFunctionParameterBuilder } from '../services/wallets/contractFunctionParameterBuilder';
 
 // Hedera Contract configuration - Updated with new deployed contract
-const HEDERA_CONTRACT_ID = import.meta.env.REACT_APP_HEDERA_CONTRACT_ID || "0.0.7180340";
+const HEDERA_CONTRACT_ID = hederaContractId;
+
+export interface ProjectDetails {
+  industry: string;
+  organization: string;
+  topic: string;
+  researchLeadName: string;
+  researchLeadEmail: string;
+}
 
 export interface ArtPiece {
   id: number;
   uri: string;
   owner: string;
+  price: string;           // Fixed price for direct purchase
   maxBid: string;
   maxBidder: string;
   auctionActive: boolean;
@@ -31,11 +41,14 @@ export interface ArtPiece {
   schemaVersion: string;
   externalUrl: string;
   imageUrl: string;
+  agreementPdfUrl: string; // IPFS link for agreement PDF
+  projectDetails: ProjectDetails;
   burned: boolean;
 }
 
 export interface IpNftCreationData {
   uri: string;
+  price: string;
   title: string;
   description: string;
   ipType: string;
@@ -45,6 +58,8 @@ export interface IpNftCreationData {
   schemaVersion: string;
   externalUrl: string;
   imageUrl: string;
+  agreementPdfUrl: string;
+  projectDetails: ProjectDetails;
   xCoordinate?: number;
   yCoordinate?: number;
   rotation?: number;
@@ -62,7 +77,7 @@ export const useNFTGallery = () => {
   const executeHederaFunction = useCallback(async (
     functionName: string,
     parameters: ContractFunctionParameterBuilder,
-    gasLimit: number = 300000
+    gasLimit: number = 5000000
   ) => {
     if (!walletInterface || !walletInterface.executeContractFunction) {
       throw new Error('Wallet not connected or does not support Hedera functions');
@@ -81,9 +96,18 @@ export const useNFTGallery = () => {
 
     setLoading(true);
     try {
+      // Log the data being sent to contract for debugging
+      console.log('Sending IPNFT data to contract:', {
+        price: ipNftData.price || "0",
+        projectDetails: ipNftData.projectDetails,
+        title: ipNftData.title,
+        description: ipNftData.description
+      });
+
       // Use Hedera contract function execution with comprehensive metadata
       const parameters = new ContractFunctionParameterBuilder()
         .addParam({ type: "string", name: "_uri", value: ipNftData.uri })
+        .addParam({ type: "uint256", name: "_price", value: ipNftData.price || "0" })
         .addParam({ type: "string", name: "_title", value: ipNftData.title })
         .addParam({ type: "string", name: "_description", value: ipNftData.description })
         .addParam({ type: "string", name: "_ipType", value: ipNftData.ipType })
@@ -92,7 +116,13 @@ export const useNFTGallery = () => {
         .addParam({ type: "bytes", name: "_metadataBytes", value: ipNftData.metadataBytes })
         .addParam({ type: "string", name: "_schemaVersion", value: ipNftData.schemaVersion })
         .addParam({ type: "string", name: "_externalUrl", value: ipNftData.externalUrl })
-        .addParam({ type: "string", name: "_imageUrl", value: ipNftData.imageUrl });
+        .addParam({ type: "string", name: "_imageUrl", value: ipNftData.imageUrl })
+        .addParam({ type: "string", name: "_agreementPdfUrl", value: ipNftData.agreementPdfUrl || "" })
+        .addParam({ type: "string", name: "_industry", value: ipNftData.projectDetails.industry || "" })
+        .addParam({ type: "string", name: "_organization", value: ipNftData.projectDetails.organization || "" })
+        .addParam({ type: "string", name: "_topic", value: ipNftData.projectDetails.topic || "" })
+        .addParam({ type: "string", name: "_researchLeadName", value: ipNftData.projectDetails.researchLeadName || "" })
+        .addParam({ type: "string", name: "_researchLeadEmail", value: ipNftData.projectDetails.researchLeadEmail || "" });
       
       // Upload the ipNft with comprehensive metadata using Hedera contract execution
       const txHash = await executeHederaFunction('uploadArt', parameters);
@@ -149,18 +179,21 @@ export const useNFTGallery = () => {
       const parameters = new ContractFunctionParameterBuilder()
         .addParam({ type: "uint256", name: "_id", value: artId });
       
-      const txHash = await executeHederaFunction('buyArt', parameters);
+      // Convert price to tinybars (1 HBAR = 100,000,000 tinybars)
+      const priceInTinybars = Math.floor(parseFloat(price) * 100000000);
+      
+      const txHash = await executeHederaFunction('buyArt', parameters, priceInTinybars);
       
       if (!txHash) {
         throw new Error('Transaction failed');
       }
 
-      toast.success('Art purchased successfully!');
+      toast.success('IP NFT purchased successfully!');
       await fetchAllPosts();
       return txHash;
     } catch (error: any) {
-      console.error('Error buying art:', error);
-      toast.error(`Error buying art: ${error.message || 'Unknown error'}`);
+      console.error('Error buying IP NFT:', error);
+      toast.error(`Error buying IP NFT: ${error.message || 'Unknown error'}`);
       return null;
     } finally {
       setLoading(false);
@@ -330,6 +363,34 @@ export const useNFTGallery = () => {
     }
   }, [accountId, executeHederaFunction, fetchAllPosts]);
 
+  // Get Price function
+  const getPrice = useCallback(async (artId: number) => {
+    try {
+      const parameters = new ContractFunctionParameterBuilder()
+        .addParam({ type: "uint256", name: "_id", value: artId });
+      
+      const result = await executeHederaFunction('getPrice', parameters);
+      return result;
+    } catch (error: any) {
+      console.error('Error getting price:', error);
+      return null;
+    }
+  }, [executeHederaFunction]);
+
+  // Get Project Details function
+  const getProjectDetails = useCallback(async (tokenId: number) => {
+    try {
+      const parameters = new ContractFunctionParameterBuilder()
+        .addParam({ type: "uint256", name: "tokenId", value: tokenId });
+      
+      const result = await executeHederaFunction('getProjectDetails', parameters);
+      return result;
+    } catch (error: any) {
+      console.error('Error getting project details:', error);
+      return null;
+    }
+  }, [executeHederaFunction]);
+
   return {
     // State
     loading,
@@ -346,6 +407,8 @@ export const useNFTGallery = () => {
     getMaxBid,
     setCoordinates,
     burnNft,
+    getPrice,
+    getProjectDetails,
     
     // Contract info
     contractAddress: HEDERA_CONTRACT_ID,

@@ -16,6 +16,8 @@ import {
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useWalletInterface } from "../services/wallets/useWalletInterface";
+
+
 export const Experience = ({ onFrameClick}) => {
   const [buildMode, setBuildMode] = useAtom(buildModeAtom);
   const [shopMode, setShopMode] = useAtom(shopModeAtom);
@@ -240,7 +242,8 @@ export const Experience = ({ onFrameClick}) => {
               } else {
                 if (item.name == "frame") {
                   console.log(item);
-                  onFrameClick(item.id,item.price,item.likes,item.title,item.by);
+                  // Pass the full item object for IP NFT modal
+                  onFrameClick(item);
                 }
               }
             }}
