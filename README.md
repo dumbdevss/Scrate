@@ -8,7 +8,7 @@
 
 ## 📌 Overview
 
-**Imagine** is a revolutionary metaverse platform where **artists, collectors, and enthusiasts** come together in a **fully immersive virtual space** to create, discover, and trade **Intellectual Property NFTs (IpNfts)**.  
+**Imagine** is a evolutionary metaverse platform where **artists, collectors, and enthusiasts** come together in a **fully immersive virtual space** to create, discover, and trade **Intellectual Property NFTs (IpNfts)**.  
 
 Visitors can walk through a **customizable 3D gallery**, interact with digital artworks, **mint new IpNfts, purchase, license, or bid** on items in real time — all backed by **secure Hedera Hashgraph blockchain transactions**.
 
