@@ -70,6 +70,7 @@ async function getHederaActivePosts() {
   try {
     console.log("Fetching active posts from Hedera contract...");
     const activePosts = await hederaContract.getAllActivePosts();
+    console.log("Hedera active posts:", activePosts);
     
     // Debug: Log the first post structure to see what we're getting from contract
     if (activePosts.length > 0) {

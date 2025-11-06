@@ -132,9 +132,9 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
         toast.error('Image size must be less than 10MB');
         return;
       }
-      
+
       setFormData(prev => ({ ...prev, imageFile: file }));
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -221,8 +221,8 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
   };
 
   const updateStepStatus = (stepId: string, status: ProgressStep['status'], errorMessage?: string) => {
-    setProgressSteps(prev => prev.map(step => 
-      step.id === stepId 
+    setProgressSteps(prev => prev.map(step =>
+      step.id === stepId
         ? { ...step, status, errorMessage }
         : step
     ));
@@ -243,14 +243,14 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
     const steps = initializeProgressSteps();
     setShowProgressModal(true);
     setCurrentStep(0);
-    
+
     try {
       // Upload image to IPFS
       updateStepStatus('image-upload', 'processing');
       const imageUrl = await uploadToIPFS(formData.imageFile);
       updateStepStatus('image-upload', 'completed');
       setCurrentStep(1);
-      
+
       // Create metadata object
       const metadata = {
         name: formData.title,
@@ -288,7 +288,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
       // Prepare IPNFT data
       const ipnftData: IPNFTData = {
         uri: metadataUri,
-        price: formData.price,
+        price: (parseFloat(formData.price) * 1000000000000000000).toString(),
         title: formData.title,
         description: formData.description,
         ipType: formData.ipType,
@@ -316,7 +316,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
       updateStepStatus('hedera-transaction', 'processing');
       await uploadIpNft(ipnftData);
       updateStepStatus('hedera-transaction', 'completed');
-      
+
       // Auto-close progress modal after 2 seconds on success
       setTimeout(() => {
         setShowProgressModal(false);
@@ -324,13 +324,13 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
       }, 2000);
     } catch (error) {
       console.error('Error uploading IPNFT:', error);
-      
+
       // Update the current step with error status
       const currentStepId = steps[currentStep]?.id;
       if (currentStepId) {
         updateStepStatus(currentStepId, 'error', error instanceof Error ? error.message : 'An unexpected error occurred');
       }
-      
+
       toast.error('Failed to upload IPNFT');
     } finally {
       setUploading(false);
@@ -437,7 +437,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                 onChange={handleImageUpload}
                 style={{ display: 'none' }}
               />
-              
+
               {imagePreview ? (
                 <Box>
                   <img
@@ -479,7 +479,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                   <DescriptionIcon color="primary" />
                   Basic Information
                 </Typography>
-                
+
                 <Stack spacing={2}>
                   <TextField
                     label="Title"
@@ -489,7 +489,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                     required
                     placeholder="Enter a descriptive title for your IPNFT"
                   />
-                  
+
                   <TextField
                     label="Description"
                     value={formData.description}
@@ -499,7 +499,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                     rows={3}
                     placeholder="Describe your intellectual property..."
                   />
-                  
+
                   <FormControl fullWidth>
                     <InputLabel>IP Type</InputLabel>
                     <Select
@@ -525,7 +525,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                   <TagIcon color="primary" />
                   Tags
                 </Typography>
-                
+
                 <Box display="flex" gap={1} mb={2}>
                   <TextField
                     label="Add Tag"
@@ -544,7 +544,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                     Add
                   </Button>
                 </Box>
-                
+
                 <Box display="flex" flexWrap="wrap" gap={1}>
                   {formData.tags.map((tag, index) => (
                     <Chip
@@ -567,7 +567,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                   <HbarIcon color="primary" />
                   Pricing
                 </Typography>
-                
+
                 <TextField
                   label="Price (HBAR)"
                   value={formData.price}
@@ -590,7 +590,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                   <BusinessIcon color="primary" />
                   Project Details
                 </Typography>
-                
+
                 <Stack spacing={2}>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
@@ -651,7 +651,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                   <LinkIcon color="primary" />
                   Additional Information
                 </Typography>
-                
+
                 <Stack spacing={2}>
                   <TextField
                     label="External URL (Optional)"
@@ -660,7 +660,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                     fullWidth
                     placeholder="https://example.com"
                   />
-                  
+
                   <TextField
                     label="Agreement PDF URL (Optional)"
                     value={formData.agreementPdfUrl}
@@ -679,7 +679,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                 <Typography variant="h6" sx={{ mb: 2 }}>
                   Gallery Position (Optional)
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={4}>
                     <TextField
@@ -710,7 +710,7 @@ export const IPNFTUploadDialog: React.FC<IPNFTUploadDialogProps> = ({
                     />
                   </Grid>
                 </Grid>
-                
+
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                   Leave empty for automatic positioning
                 </Typography>

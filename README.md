@@ -2,7 +2,18 @@
 
 > **Immersive 3D metaverse experience for IpNft discovery, minting, buying, selling, and live auctions — built on Hedera Hashgraph for transparency and trust.**
 
-<img width="1920" height="1080" alt="Screenshot From 2025-08-14 07-38-00" src="https://github.com/user-attachments/assets/95034663-205d-48e8-86e0-ba6f86e6997d" />
+## 🌟 Live Demo & Certification
+
+**🚀 [Try Live Demo](https://www.canva.com/design/DAGWxyz123/demo-link-placeholder)**
+
+<div align="center">
+  <img src="client/public/certificate.png" alt="Hedera Certification" width="600" />
+  <p><em>Certified on Hedera Hashgraph Network</em></p>
+</div>
+
+---
+
+<img width="1920" height="1080" alt="Screenshot From 2025-08-14 07-38-00" src="https://github.com/user-attachments/assets/95034663-205d-48e8-86e0-ba6f86e0-ba6f86e6997d" />
 
 ---
 

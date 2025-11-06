@@ -180,7 +180,7 @@ export const useNFTGallery = () => {
         .addParam({ type: "uint256", name: "_id", value: artId });
       
       // Convert price to tinybars (1 HBAR = 100,000,000 tinybars)
-      const priceInTinybars = Math.floor(parseFloat(price) * 100000000);
+      const priceInTinybars = Math.floor(parseFloat(price) * 10000000);
       
       const txHash = await executeHederaFunction('buyArt', parameters, priceInTinybars);
       

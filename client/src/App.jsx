@@ -96,9 +96,25 @@ function App() {
         return;
       }
       
-      await contractBuyArt(id, selectedIPNFT?.price || "0");
-      setIsModalVisible(false);
-      setSelectedIPNFT(null);
+      const result = await contractBuyArt(id, selectedIPNFT?.price || "0");
+      
+      if (result) {
+        // Update the selected IPNFT to reflect new ownership
+        setSelectedIPNFT(prev => ({
+          ...prev,
+          owner: accountId,
+          sold: true,
+          auctionActive: false
+        }));
+        
+        toast.success("🎉 Congratulations! You now own this IP NFT!");
+        
+        // Close modal after a brief delay to show the success message
+        setTimeout(() => {
+          setIsModalVisible(false);
+          setSelectedIPNFT(null);
+        }, 2000);
+      }
     } catch (error) {
       console.error("Error buying IP NFT:", error);
       toast.error("Error buying IP NFT");
@@ -112,7 +128,18 @@ function App() {
         return;
       }
       
-      await contractPlaceBid(id, bidAmount);
+      const result = await contractPlaceBid(id, bidAmount);
+      
+      if (result) {
+        // Update the selected IPNFT to reflect new highest bid
+        setSelectedIPNFT(prev => ({
+          ...prev,
+          maxBid: bidAmount,
+          maxBidder: accountId
+        }));
+        
+        toast.success("🎯 Bid placed successfully! You are now the highest bidder!");
+      }
     } catch (error) {
       console.error("Error placing bid:", error);
       toast.error("Error placing bid");
@@ -126,7 +153,46 @@ function App() {
         return;
       }
       
-      await contractToggleAuction(id);
+      const wasAuctionActive = selectedIPNFT?.auctionActive;
+      const result = await contractToggleAuction(id);
+      
+      if (result) {
+        if (wasAuctionActive) {
+          // Auction was ended - check if there was a highest bidder
+          const hasMaxBidder = selectedIPNFT?.maxBidder && selectedIPNFT?.maxBidder !== "0x0000000000000000000000000000000000000000";
+          
+          if (hasMaxBidder) {
+            // Transfer ownership to highest bidder
+            setSelectedIPNFT(prev => ({
+              ...prev,
+              owner: prev.maxBidder,
+              sold: true,
+              auctionActive: false
+            }));
+            
+            if (selectedIPNFT?.maxBidder === accountId) {
+              toast.success("🎉 Congratulations! You won the auction and now own this IP NFT!");
+            } else {
+              toast.success(`Auction ended! IP NFT sold to ${selectedIPNFT?.maxBidder?.slice(0, 8)}...${selectedIPNFT?.maxBidder?.slice(-6)}`);
+            }
+          } else {
+            // No bidders, auction just ended
+            setSelectedIPNFT(prev => ({
+              ...prev,
+              auctionActive: false
+            }));
+            toast.success("Auction ended with no bids. IP NFT is now available for direct purchase.");
+          }
+        } else {
+          // Auction was started
+          setSelectedIPNFT(prev => ({
+            ...prev,
+            auctionActive: true,
+            sold: false
+          }));
+          toast.success("🔥 Auction started! Users can now place bids on your IP NFT.");
+        }
+      }
     } catch (error) {
       console.error("Error toggling auction:", error);
       toast.error("Error toggling auction");

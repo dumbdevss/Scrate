@@ -188,10 +188,23 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
   const [bidAmount, setBidAmount] = useState('');
   const [liked, setLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(item.likes);
+  const [ownershipChanged, setOwnershipChanged] = useState(false);
 
   useEffect(() => {
     setLocalLikes(item.likes);
   }, [item.likes]);
+
+  // Watch for ownership changes and show notification
+  useEffect(() => {
+    const isNewOwner = currentUser === item.owner || currentUser === item.by;
+    if (isNewOwner && !ownershipChanged && item.sold) {
+      setOwnershipChanged(true);
+      // Auto-switch to Owner Panel tab if user just became owner
+      setTimeout(() => {
+        setTabValue(4);
+      }, 1000);
+    }
+  }, [item.owner, item.by, item.sold, currentUser, ownershipChanged]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -200,8 +213,7 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
   const handleBuy = async () => {
     try {
       await onBuy(item.id);
-      toast.success('IP NFT purchased successfully!');
-      onClose();
+      // Success handling is done in App.jsx
     } catch (error) {
       toast.error('Purchase failed');
     }
@@ -223,7 +235,7 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
 
     try {
       await onPlaceBid(item.id, bidAmount);
-      toast.success('Bid placed successfully!');
+      // Success handling is done in App.jsx
       setBidAmount('');
     } catch (error) {
       toast.error('Failed to place bid');
@@ -245,7 +257,7 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
     if (!onToggleAuction) return;
     try {
       await onToggleAuction(item.id);
-      toast.success(`Auction ${item.auctionActive ? 'ended' : 'started'}!`);
+      // Success handling is done in App.jsx
     } catch (error) {
       toast.error('Failed to toggle auction');
     }
@@ -269,6 +281,11 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
           color: 'white',
           overflow: 'hidden',
           maxHeight: '90vh'
+        },
+        '@keyframes pulse': {
+          '0%': { opacity: 1 },
+          '50%': { opacity: 0.7 },
+          '100%': { opacity: 1 }
         }
       }}
     >
@@ -354,7 +371,22 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
           
           {/* Status and IP type indicators */}
           <Box sx={{ position: 'absolute', top: 16, left: 16 }}>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} flexWrap="wrap">
+              {/* Owner Badge - Most Prominent */}
+              {isOwner && (
+                <Chip 
+                  label="YOU OWN THIS"
+                  icon={<SecurityIcon />}
+                  sx={{
+                    background: 'linear-gradient(45deg, #4CAF50 30%, #66BB6A 90%)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '0.9rem',
+                    animation: 'pulse 2s infinite'
+                  }}
+                />
+              )}
+              
               {/* IP Type Badge */}
               {item.ipType && (
                 <Chip 
@@ -508,6 +540,7 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
             <Tab label="IP Details" sx={tabStyle} />
             <Tab label="Verification" sx={tabStyle} />
             <Tab label="History" sx={tabStyle} />
+            {isOwner && <Tab label="Owner Panel" sx={tabStyle} />}
           </Tabs>
         </Box>
 
@@ -601,26 +634,51 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
             )}
 
             {/* Owner Actions */}
-            {isOwner && onToggleAuction && (
+            {isOwner && (
               <Grid item xs={12} md={6}>
                 <Card sx={cardStyle}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      <GavelIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                      Auction Management
+                      <SecurityIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      You Own This IP NFT
                     </Typography>
+                    
+                    <Alert severity="success" sx={{ mb: 2, background: 'rgba(76, 175, 80, 0.1)' }}>
+                      <Typography variant="body2">
+                        🎉 You are the verified owner of this intellectual property
+                      </Typography>
+                    </Alert>
+                    
                     <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
-                      {item.auctionActive ? 'End the current auction' : 'Start an auction for your IP NFT'}
+                      As the owner, you have full rights to this IP and can manage its sale or auction.
+                      Visit the <strong>Owner Panel</strong> tab for detailed management options.
                     </Typography>
+                    
+                    {onToggleAuction && (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        size="large"
+                        onClick={handleToggleAuction}
+                        disabled={loading}
+                        color={item.auctionActive ? "error" : "success"}
+                        sx={{ mb: 1 }}
+                      >
+                        {loading ? 'Processing...' : (item.auctionActive ? 'End Auction' : 'Start Auction')}
+                      </Button>
+                    )}
+                    
                     <Button
                       fullWidth
-                      variant="contained"
-                      size="large"
-                      onClick={handleToggleAuction}
-                      disabled={loading}
-                      color={item.auctionActive ? "error" : "success"}
+                      variant="outlined"
+                      onClick={() => setTabValue(4)}
+                      sx={{ 
+                        color: 'white', 
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        '&:hover': { borderColor: 'white' }
+                      }}
                     >
-                      {loading ? 'Processing...' : (item.auctionActive ? 'End Auction' : 'Start Auction')}
+                      Go to Owner Panel
                     </Button>
                   </CardContent>
                 </Card>
@@ -933,6 +991,303 @@ export const IPNFTMarketplaceModal: React.FC<IPNFTMarketplaceModalProps> = ({
             </CardContent>
           </Card>
         </TabPanel>
+
+        {/* Owner Panel Tab */}
+        {isOwner && (
+          <TabPanel value={tabValue} index={4}>
+            {/* Ownership Celebration Banner */}
+            {ownershipChanged && (
+              <Box sx={{ mb: 3 }}>
+                <Alert 
+                  severity="success" 
+                  sx={{ 
+                    background: 'linear-gradient(45deg, #4CAF50 30%, #66BB6A 90%)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    '& .MuiAlert-icon': { color: 'white' }
+                  }}
+                >
+                  <Typography variant="h6" gutterBottom>
+                    🎉 Congratulations! You are now the owner of this IP NFT!
+                  </Typography>
+                  <Typography variant="body2">
+                    You now have full rights to this intellectual property and can manage its sale or auction from this panel.
+                  </Typography>
+                </Alert>
+              </Box>
+            )}
+            
+            <Grid container spacing={3}>
+              {/* Auction Management */}
+              <Grid item xs={12} md={6}>
+                <Card sx={cardStyle}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      <GavelIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      Auction Management
+                    </Typography>
+                    
+                    {item.auctionActive ? (
+                      <Box>
+                        <Alert severity="success" sx={{ mb: 2, background: 'rgba(76, 175, 80, 0.1)' }}>
+                          <Typography variant="body2">
+                            🔴 Your auction is currently LIVE
+                          </Typography>
+                        </Alert>
+                        
+                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
+                          Current highest bid: <strong>{item.maxBid} HBAR</strong>
+                          {item.maxBidder && (
+                            <><br />Highest bidder: {item.maxBidder.slice(0, 8)}...{item.maxBidder.slice(-6)}</>
+                          )}
+                        </Typography>
+                        
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          size="large"
+                          onClick={handleToggleAuction}
+                          disabled={loading}
+                          color="error"
+                          sx={{ mb: 2 }}
+                        >
+                          {loading ? 'Processing...' : 'End Auction'}
+                        </Button>
+                        
+                        <Typography variant="caption" color="rgba(255, 255, 255, 0.6)">
+                          Ending the auction will transfer ownership to the highest bidder if there are any bids.
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box>
+                        <Alert severity="info" sx={{ mb: 2, background: 'rgba(33, 150, 243, 0.1)' }}>
+                          <Typography variant="body2">
+                            Your IP NFT is available for direct purchase at {item.price} HBAR
+                          </Typography>
+                        </Alert>
+                        
+                        <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 2 }}>
+                          Start an auction to allow competitive bidding on your intellectual property.
+                        </Typography>
+                        
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          size="large"
+                          onClick={handleToggleAuction}
+                          disabled={loading || item.sold}
+                          color="success"
+                        >
+                          {loading ? 'Processing...' : 'Start Auction'}
+                        </Button>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Ownership Information */}
+              <Grid item xs={12} md={6}>
+                <Card sx={cardStyle}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      <SecurityIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      Ownership Rights
+                    </Typography>
+                    
+                    <List dense>
+                      <ListItem>
+                        <ListItemIcon><VerifiedIcon sx={{ color: '#4CAF50' }} /></ListItemIcon>
+                        <ListItemText 
+                          primary="Full IP Rights" 
+                          secondary="You own all intellectual property rights"
+                          sx={{ '& .MuiListItemText-secondary': { color: 'rgba(255, 255, 255, 0.7)' } }}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><GavelIcon sx={{ color: '#FF9800' }} /></ListItemIcon>
+                        <ListItemText 
+                          primary="Transfer Rights" 
+                          secondary="You can sell or auction this IP NFT"
+                          sx={{ '& .MuiListItemText-secondary': { color: 'rgba(255, 255, 255, 0.7)' } }}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><CopyrightIcon sx={{ color: '#2196F3' }} /></ListItemIcon>
+                        <ListItemText 
+                          primary="Commercial Use" 
+                          secondary="You can commercially exploit this IP"
+                          sx={{ '& .MuiListItemText-secondary': { color: 'rgba(255, 255, 255, 0.7)' } }}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><SecurityIcon sx={{ color: '#9C27B0' }} /></ListItemIcon>
+                        <ListItemText 
+                          primary="Legal Protection" 
+                          secondary="Blockchain-verified ownership proof"
+                          sx={{ '& .MuiListItemText-secondary': { color: 'rgba(255, 255, 255, 0.7)' } }}
+                        />
+                      </ListItem>
+                    </List>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Revenue & Analytics */}
+              <Grid item xs={12} md={6}>
+                <Card sx={cardStyle}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      <WalletIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      Revenue Analytics
+                    </Typography>
+                    
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
+                        Current Value
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" color="#4CAF50">
+                        {item.auctionActive ? `${item.maxBid} HBAR` : `${item.price} HBAR`}
+                      </Typography>
+                    </Box>
+                    
+                    <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+                    
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
+                        Engagement
+                      </Typography>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <FavoriteIcon sx={{ color: '#ff4757', fontSize: 20 }} />
+                          <Typography variant="body1" fontWeight="medium">
+                            {localLikes} likes
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.2)' }} />
+                    
+                    <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" sx={{ mb: 1 }}>
+                      Status: <strong>{item.sold ? 'Sold' : item.auctionActive ? 'On Auction' : 'Available'}</strong>
+                    </Typography>
+                    <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
+                      Listed: {createdDate}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Asset Management */}
+              <Grid item xs={12} md={6}>
+                <Card sx={cardStyle}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      <InfoIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      Asset Management
+                    </Typography>
+                    
+                    <Stack spacing={2}>
+                      {/* View Agreement */}
+                      {item.agreementPdfUrl && (
+                        <Button
+                          variant="outlined"
+                          startIcon={<DescriptionIcon />}
+                          href={item.agreementPdfUrl}
+                          target="_blank"
+                          sx={{ 
+                            color: 'white', 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            '&:hover': { borderColor: 'white' }
+                          }}
+                        >
+                          View Legal Agreement
+                        </Button>
+                      )}
+                      
+                      {/* External Link */}
+                      {item.externalUrl && (
+                        <Button
+                          variant="outlined"
+                          startIcon={<LinkIcon />}
+                          href={item.externalUrl}
+                          target="_blank"
+                          sx={{ 
+                            color: 'white', 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            '&:hover': { borderColor: 'white' }
+                          }}
+                        >
+                          View External Resource
+                        </Button>
+                      )}
+                      
+                      {/* Contact Information */}
+                      {(item.researchLeadEmail || item.projectDetails?.researchLeadEmail) && (
+                        <Box sx={{ p: 2, background: 'rgba(0, 0, 0, 0.2)', borderRadius: 1 }}>
+                          <Typography variant="body2" color="rgba(255, 255, 255, 0.7)" gutterBottom>
+                            Research Contact
+                          </Typography>
+                          <Typography variant="body2">
+                            {item.researchLeadName || item.projectDetails?.researchLeadName || 'Research Lead'}
+                          </Typography>
+                          <Typography variant="body2" color="rgba(255, 255, 255, 0.8)">
+                            {item.researchLeadEmail || item.projectDetails?.researchLeadEmail}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Ownership Verification */}
+              <Grid item xs={12}>
+                <Card sx={cardStyle}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      <SecurityIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                      Ownership Verification
+                    </Typography>
+                    
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <VerifiedIcon sx={{ fontSize: 48, color: '#4CAF50', mb: 1 }} />
+                          <Typography variant="h6" gutterBottom>Verified Owner</Typography>
+                          <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
+                            Your ownership is cryptographically verified on the Hedera blockchain
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <SecurityIcon sx={{ fontSize: 48, color: '#2196F3', mb: 1 }} />
+                          <Typography variant="h6" gutterBottom>Secure Transfer</Typography>
+                          <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
+                            All transfers are secured by smart contracts and blockchain technology
+                          </Typography>
+                        </Box>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <CopyrightIcon sx={{ fontSize: 48, color: '#FF9800', mb: 1 }} />
+                          <Typography variant="h6" gutterBottom>IP Protection</Typography>
+                          <Typography variant="body2" color="rgba(255, 255, 255, 0.7)">
+                            Your intellectual property rights are protected and immutable
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </TabPanel>
+        )}
       </DialogContent>
     </Dialog>
   );
