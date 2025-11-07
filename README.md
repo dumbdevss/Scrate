@@ -13,10 +13,6 @@
 
 ---
 
-<img width="1920" height="1080" alt="Screenshot From 2025-08-14 07-38-00" src="https://github.com/user-attachments/assets/95034663-205d-48e8-86e0-ba6f86e0-ba6f86e6997d" />
-
----
-
 ## 📌 Overview
 
 **Imagine** is a evolutionary metaverse platform where **artists, collectors, and enthusiasts** come together in a **fully immersive virtual space** to create, discover, and trade **Intellectual Property NFTs (IpNfts)**.  
@@ -37,8 +33,6 @@ This project leverages **Hedera's native smart contract capabilities** with **Me
 - Artists and visitors can create personalized avatars to represent themselves in the space.
 - Supports unique outfits, accessories, and animations.
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/81f8dc3c-345c-4598-9a23-f143d18317b2" />
-
 
 ### 🎨 Mint & Upload IpNfts
 - Create and mint new Intellectual Property NFTs directly in the gallery.
@@ -49,14 +43,6 @@ This project leverages **Hedera's native smart contract capabilities** with **Me
 - Direct IpNft purchases via Hedera smart contracts.
 - Timed auctions with transparent bidding history.
 - Blockchain-based proof of ownership and provenance.
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/7352af08-b48d-4502-9d89-83e2dbc064f0" />
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f40cba35-fb03-4afc-b9a5-8186d2ac9841" />
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/5a8b755e-77b6-4095-b030-42ab5dd41982" />
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/b97d441e-3174-4817-9669-8cea69062fce" />
 
 ### 🔑 Licensing with Smart Contracts
 - Artists can license works (art, music, writing) with **clear, immutable terms**.
@@ -118,12 +104,6 @@ The IpNft Gallery smart contract is deployed on Hedera Hashgraph, providing:
 - Live gallery updates via Hedera contract queries
 - Instant transaction confirmations
 - Cross-platform synchronization
-
-<img width="856" height="441" alt="Screenshot From 2025-08-14 07-27-44" src="https://github.com/user-attachments/assets/0d578c4a-2b6a-4329-89c3-2ea1d00f3402" />
-
-<img width="867" height="645" alt="Screenshot From 2025-08-14 07-28-21" src="https://github.com/user-attachments/assets/fa8e7fed-e133-4f39-a0aa-2b41a265f1b5" />
-
-<img width="1024" height="794" alt="Screenshot From 2025-08-14 07-29-13" src="https://github.com/user-attachments/assets/d0d75d56-680a-432f-be7c-8736f280de75" />
 
 ---
 
