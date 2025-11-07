@@ -4,7 +4,7 @@
 
 ## 🌟 Live Demo & Certification
 
-**🚀 [Try Live Demo](https://www.canva.com/design/DAGWxyz123/demo-link-placeholder)**
+**🚀 [Try Live Demo](https://youtu.be/QY3YU4K7Wro)**
 
 <div align="center">
   <img src="client/public/certificate.png" alt="Hedera Certification" width="600" />

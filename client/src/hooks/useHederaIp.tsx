@@ -182,7 +182,7 @@ export const useNFTGallery = () => {
       // Convert price to tinybars (1 HBAR = 100,000,000 tinybars)
       const priceInTinybars = Math.floor(parseFloat(price) * 10000000);
       
-      const txHash = await executeHederaFunction('buyArt', parameters, priceInTinybars);
+      const txHash = await executeHederaFunction('buyArt', parameters);
       
       if (!txHash) {
         throw new Error('Transaction failed');
