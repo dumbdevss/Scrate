@@ -4,7 +4,12 @@
 
 ## 🌟 Live Demo & Certification
 
-**🚀 [Try Live Demo](https://youtu.be/QY3YU4K7Wro)**
+<div align="center">
+  <a href="https://youtu.be/QY3YU4K7Wro" target="_blank">
+    <img src="https://i.ytimg.com/vi/QY3YU4K7Wro/maxresdefault.jpg" alt="Watch the live demo" width="600" />
+  </a>
+  <p><strong>🚀 Click to watch the live demo</strong></p>
+</div>
 
 <div align="center">
   <img src="client/public/certificate.png" alt="Hedera Certification" width="600" />
